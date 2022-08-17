@@ -1,7 +1,7 @@
 from flask import Flask
 import os
 
-hostName = os.environ.get('HOST_NAME') or "localhost"
+hostName = os.environ.get('HOST_NAME') or "0.0.0.0"
 serverPort = os.environ.get('SERVER_PORT') or 8080
 
 app = Flask(__name__)
