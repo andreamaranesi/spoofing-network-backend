@@ -1,0 +1,22 @@
+services:
+    db:
+      image: mysql
+      restart: always
+      ports: 
+        - 3306:3306
+      env_file:
+        - backend-variables.env      
+      volumes:
+        - "./db/seed.sql:/docker-entrypoint-initdb.d/seed.sql"
+    web-node2:
+        build: "./node"
+        ports:
+          - 8080:8080
+        env_file:
+          - backend-variables.env
+        depends_on:
+          - db
+    web-python:
+        build: "./python"
+        ports:
+          - 8081:8080
