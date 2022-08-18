@@ -1,13 +1,12 @@
 
-import {UserDao} from "./dao/UserDao"
-import { UserDaoImpl } from "./dao/UserDaoImpl";
 import {User} from "../../models/User";
+import { PythonDao } from "./dao/PythonDao";
 
 export class Repository{
     private user:User;
-    public userDao: UserDao;
+    public pythonDao: PythonDao;
 
-    constructor(user_email:string){
-        this.userDao = new UserDaoImpl()
+    constructor(user){
+        this.user = user;
     }
 }

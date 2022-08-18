@@ -1,20 +1,16 @@
 
+import {checkToken, verifyAndAuthenticate, errorHandler} from "./middleware/middleware"
 
 var express = require('express');
-const jwt = require('jsonwebtoken');
 var app = express();
-
-const {myLogger, requestTime, checkToken, verifyAndAuthenticate, logHerrors, errorHandler} = require("./middleware/middleware.js")
   
 
-app.use(myLogger);
-app.use(requestTime);
 app.use(checkToken);
 app.use(verifyAndAuthenticate);
 app.use(errorHandler);
 
 app.get('/', function (req, res) {
-  res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
+  res.send('Hello ' + req.user.email);
 });
 app.get('/a', function (req, res) {
   res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
