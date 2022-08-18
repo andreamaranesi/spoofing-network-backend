@@ -1,4 +1,5 @@
 
+import { Controller } from "./controller/Controller";
 import {checkToken, verifyAndAuthenticate, errorHandler} from "./middleware/middleware"
 
 var express = require('express');
@@ -9,8 +10,10 @@ app.use(checkToken);
 app.use(verifyAndAuthenticate);
 app.use(errorHandler);
 
+
 app.get('/', function (req, res) {
-  res.send('Hello ' + req.user.email);
+  let controller = new Controller(req.user);
+  res.send(req.user.email);
 });
 app.get('/a', function (req, res) {
   res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);

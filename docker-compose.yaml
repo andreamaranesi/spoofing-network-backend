@@ -18,14 +18,14 @@ services:
           - image-storage:/usr/src/app-node/storage
         depends_on:
           - db
-    web-python:
-        env_file:
-          - backend-variables.env
-        build: "./python"
-        volumes:
-          - image-storage:/usr/src/app-python/storage
-        ports:
-          - 8081:8080
+    #web-python:
+     #   env_file:
+      #    - backend-variables.env
+       # build: "./python"
+        #volumes:
+         # - image-storage:/usr/src/app-python/storage
+        #ports:
+         # - 8081:8080
 
 volumes:
   image-storage:

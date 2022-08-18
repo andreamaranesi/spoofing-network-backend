@@ -1,13 +1,15 @@
 "use strict";
-exports.__esModule = true;
-var middleware_1 = require("./middleware/middleware");
+Object.defineProperty(exports, "__esModule", { value: true });
+const Controller_1 = require("./controller/Controller");
+const middleware_1 = require("./middleware/middleware");
 var express = require('express');
 var app = express();
 app.use(middleware_1.checkToken);
 app.use(middleware_1.verifyAndAuthenticate);
 app.use(middleware_1.errorHandler);
 app.get('/', function (req, res) {
-    res.send('Hello ' + req.user.email);
+    let controller = new Controller_1.Controller(req.user);
+    res.send(req.user.email);
 });
 app.get('/a', function (req, res) {
     res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);

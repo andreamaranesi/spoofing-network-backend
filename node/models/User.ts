@@ -7,20 +7,6 @@ export class User extends Model{
     declare email: string;
     declare token: number;
     declare isAdmin: boolean;
-
-    getId():number{
-      return this.id
-    }
-
-    getName():string{
-        return this.userName;
-    }
-    getEmail():string{
-        return this.email;
-    }
-    getToken():number{
-        return this.token;
-    }
 }
 
 let sequelize = DatabaseSingleton.getInstance()
@@ -50,5 +36,6 @@ User.init({
   }, {
     sequelize, 
     modelName: 'User', 
-    tableName: 'user'
+    tableName: 'user',
+    timestamps: false
   });

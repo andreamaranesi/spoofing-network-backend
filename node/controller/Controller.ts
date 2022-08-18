@@ -1,9 +1,10 @@
+import { User } from "../models/User";
 import {Repository} from "./repository/Repository"
 
-class Controller{
+export class Controller{
     private repository:Repository;
 
-    constructor(user){
-        this.repository = new Repository(user);
+    constructor(user: User){
+
     }
 }
