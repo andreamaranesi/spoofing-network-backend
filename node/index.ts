@@ -1,37 +1,31 @@
 
 
-const db_name= process.env.DB_NAME || "dataset";
-const db_username= process.env.MYSQL_USER || "root";
-const db_password= process.env.MYSQL_PASSWORD || process.env.MYSQL_ROOT_PASSWORD || "root";
+var express = require('express');
+const jwt = require('jsonwebtoken');
+var app = express();
 
-const db_host = process.env.MYSQL_HOST || "db";
-
-console.log(db_host)
-
-const Sequelize = require("sequelize");
-const sequelize = new Sequelize(
-    db_name,
-    db_username,
-    db_password,
-  {
-    host: db_host,
-    dialect: 'mysql',
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
-  },
+const {myLogger, requestTime, checkToken, verifyAndAuthenticate, logHerrors, errorHandler} = require("./middleware/middleware.js")
   
-);
 
-sequelize.authenticate().then(() => {
-  console.log('Connection has been established successfully.');
-}).catch((error) => {
-  console.error('Unable to connect to the database: ', error);
+app.use(myLogger);
+app.use(requestTime);
+app.use(checkToken);
+app.use(verifyAndAuthenticate);
+app.use(errorHandler);
+
+app.get('/', function (req, res) {
+  res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
+});
+app.get('/a', function (req, res) {
+  res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
+});
+app.get('/b', function (req, res) {
+  res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
+});
+app.get('/c', function (req, res) {
+  res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
 });
 
 
 
-
+app.listen(8080);

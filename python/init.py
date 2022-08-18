@@ -9,6 +9,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def main():
+    isdir = os.path.isdir(os.environ.get('IMAGE_STORAGE'))
+    return "lo è: " + str(isdir)
     return 'Hello, World!'
 
 
