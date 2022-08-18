@@ -11,7 +11,6 @@ app = Flask(__name__)
 def main():
     isdir = os.path.isdir(os.environ.get('IMAGE_STORAGE'))
     return "lo è: " + str(isdir)
-    return 'Hello, World!'
 
 
 app.run(host=hostName, port=serverPort)

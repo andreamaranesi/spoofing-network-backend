@@ -36,20 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.errorHandler = exports.verifyAndAuthenticate = exports.checkToken = exports.checkHeader = void 0;
+exports.errorHandler = exports.verifyAndAuthenticate = exports.checkToken = void 0;
 var User_1 = require("../models/User");
 var jwt = require('jsonwebtoken');
-var checkHeader = function (req, res, next) {
-    var authHeader = req.headers.authorization;
-    if (authHeader) {
-        next();
-    }
-    else {
-        var err = new Error("ahi ahi no auth header");
-        next(err);
-    }
-};
-exports.checkHeader = checkHeader;
 var checkToken = function (req, res, next) {
     var bearerHeader = req.headers.authorization;
     if (typeof bearerHeader !== "undefined") {

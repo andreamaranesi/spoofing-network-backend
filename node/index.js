@@ -18,4 +18,5 @@ app.get('/b', function (req, res) {
 app.get('/c', function (req, res) {
     res.send('Hello ' + req.user.GivenName + ' ' + req.user.Surname);
 });
-app.listen(8080);
+app.listen(3000, '0.0.0.0');
+console.log("avviato");

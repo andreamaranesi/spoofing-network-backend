@@ -11,7 +11,7 @@ services:
     web-node:
         build: "./node"
         ports:
-          - 8080:8080
+          - 8080:3000
         env_file:
           - backend-variables.env
         volumes:
@@ -19,7 +19,11 @@ services:
         depends_on:
           - db
     web-python:
+        env_file:
+          - backend-variables.env
         build: "./python"
+        volumes:
+          - image-storage:/usr/src/app-python/storage
         ports:
           - 8081:8080
 

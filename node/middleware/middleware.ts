@@ -1,15 +1,6 @@
 import { User } from "../models/User";
 const jwt = require('jsonwebtoken');
 
-export const checkHeader = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    next();
-  } else {
-    let err = new Error("ahi ahi no auth header");
-    next(err);
-  }
-};
 
 export const checkToken = (req, res, next) => {
   const bearerHeader = req.headers.authorization;
