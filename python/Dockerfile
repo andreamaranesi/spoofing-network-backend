@@ -1,5 +1,7 @@
-FROM python:3.8.13
+FROM tensorflow/tensorflow:latest
 WORKDIR /usr/src/app-python
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
 COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
 CMD [ "python", "init.py" ]
