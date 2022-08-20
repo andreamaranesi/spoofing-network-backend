@@ -11,7 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = exports.verifyAndAuthenticate = exports.checkToken = void 0;
 const User_1 = require("../models/User");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+// check the Authorization token is not empty
 const checkToken = (req, res, next) => {
     const bearerHeader = req.headers.authorization;
     if (typeof bearerHeader !== "undefined") {
@@ -19,22 +20,29 @@ const checkToken = (req, res, next) => {
         req.token = bearerToken;
         next();
     }
-    else {
-        res.sendStatus(401);
-    }
+    else
+        next(new Error("token absent"));
 };
 exports.checkToken = checkToken;
+// validate the token key and the expiration
 const verifyAndAuthenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    let decoded = jwt.verify(req.token, process.env.JWT_SECRET_KEY);
-    if (decoded !== null)
+    try {
+        let decoded = jwt.verify(req.token, process.env.JWT_SECRET_KEY);
         req.user = yield User_1.User.findOne({ where: { email: decoded.email } });
-    else {
-        let err = new Error("invalid key");
-        next(err);
+    }
+    catch (error) {
+        if (typeof error === "object")
+            if (error.name == "TokenExpiredError")
+                res.status(403).send({ error: "Token Expired" });
+            else
+                res.status(403).send({ error: error.message });
+        else
+            next(new Error(error));
     }
     next();
 });
 exports.verifyAndAuthenticate = verifyAndAuthenticate;
+// send back the error message
 const errorHandler = (err, req, res, next) => {
     res.status(500).send({ error: err.message });
 };

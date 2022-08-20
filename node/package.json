@@ -18,12 +18,17 @@
   },
   "homepage": "https://github.com/andreamaranesi/spoofing-network-backend#readme",
   "dependencies": {
+    "axios": "^0.27.2",
     "express": "^4.18.1",
+    "express-fileupload": "^1.4.0",
+    "express-validator": "^6.14.2",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.3.3",
-    "sequelize": "^6.21.3"
+    "sequelize": "^6.21.3",
+    "unzipper": "^0.10.11"
   },
   "devDependencies": {
+    "@types/express-fileupload": "^1.2.3",
     "@types/node": "^18.7.6"
   }
 }
