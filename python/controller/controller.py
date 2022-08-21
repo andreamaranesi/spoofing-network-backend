@@ -22,7 +22,7 @@ class Controller:
         
         imagesForMetrics = {"labelList": [], "predictionList": [], "UUIDList": []}
         for image in imagePredictions:
-            if image["label"] is not None:
+            if image["label"] != "":
                 imagesForMetrics["labelList"].append(image["label"])
                 imagesForMetrics["predictionList"].append(image["prediction"])
                 imagesForMetrics["UUIDList"].append(image["UUID"])
