@@ -1,6 +1,9 @@
 import { DataTypes, Model } from "sequelize";
 import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
+import { Dataset } from "./Dataset";
 
+
+// Tag Model
 export class DatasetTag extends Model{
     declare datasetId: number;
     declare tag: string;
@@ -8,10 +11,15 @@ export class DatasetTag extends Model{
 
 let sequelize = DatabaseSingleton.getInstance();
 
+// relationship with database
 DatasetTag.init({
     datasetId: {
         type: DataTypes.INTEGER,
-        primaryKey: true
+        primaryKey: true,
+        references:  {
+            model: Dataset,
+            key: 'id'
+        },
     },
     tag: {
         type: DataTypes.STRING(50),
@@ -19,5 +27,13 @@ DatasetTag.init({
     }
 }, {
     sequelize,
-    timestamps: false
+    timestamps: false,
+    modelName: "DatasetTag",
+    tableName: "datasetTag",
 });
+
+Dataset.hasMany(DatasetTag, {
+    foreignKey: 'datasetId',
+  });
+
+DatasetTag.belongsTo(Dataset);

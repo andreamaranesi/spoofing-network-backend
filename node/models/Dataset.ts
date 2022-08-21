@@ -1,46 +1,79 @@
 import { DataTypes, Model } from "sequelize";
 import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
+import { DatasetTag } from "./DatasetTag";
+import { Image } from "./Images";
 import { User } from "./User";
 
+// Dataset Model
 export class Dataset extends Model {
-    declare id: number; // this is ok! The 'declare' keyword ensures this field will not be emitted by TypeScript.
-    declare datasetName: string;
-    declare classes: number;
-    declare creationDate: Date;
-    declare userId: number;
-}
-  
-let sequelize = DatabaseSingleton.getInstance()
+  declare id: number; // this is ok! The 'declare' keyword ensures this field will not be emitted by TypeScript.
+  declare datasetName: string;
+  declare classes: number;
+  declare creationDate: Date;
+  declare userId: number;
 
-Dataset.init({
+  // for logical deletion
+  declare isDeleted: boolean;
+}
+
+let sequelize = DatabaseSingleton.getInstance();
+
+// relationship with database
+Dataset.init(
+  {
     id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+      validate: {
+        isNumeric: {
+            msg: "dataset id must be a number",
+        }
+      },
     },
-    datasetName: {
-        type: DataTypes.STRING(50),
-        allowNull: false
+    name: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      field: "datasetName",
+      validate: {
+        notEmpty: { msg: "dataset name must be not empty" },
+      },
     },
-    classes:{
-        type: DataTypes.INTEGER,
-        allowNull: false
+    numClasses: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "classes",
+      validate: {
+        min: {
+          args: [1],
+          msg: "number of classes must be >= 1",
+        },
+        isNumeric: {
+            msg: "number of classes must be a number",
+        }
+      },
     },
     creationDate: {
-        type: DataTypes.DATE,
-        allowNull: false
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
     },
     userId: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: User,
-            key: 'id'
-        },
-        allowNull: false
-    }},
-    {
+      type: DataTypes.INTEGER,
+      references: {
+        model: User,
+        key: "id",
+      },
+      allowNull: false,
+    },
+  },
+  {
     sequelize,
-    modelName: 'Dataset',
-    tableName: 'dataset',
-    timestamps: false    
-});
+    modelName: "Dataset",
+    tableName: "dataset",
+    timestamps: false,
+  }
+);
