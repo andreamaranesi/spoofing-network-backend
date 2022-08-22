@@ -24,6 +24,12 @@ class Controller {
         this.repository = new Repository_1.Repository(user);
         this.user = user;
     }
+    // checks if a list contains duplicated entries
+    checkDuplicateEntries(list) {
+        if ([...new Set(list)].length !== list.length)
+            return true;
+        return false;
+    }
     // from a list of Models and an original list
     // checks which model attributes are not in the original list
     showNotAuthorizedItems(list, originalList, key, modelName) {
@@ -130,6 +136,8 @@ class Controller {
     checkDoInference(request) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                if (this.checkDuplicateEntries(request.images))
+                    return new Error("there are duplicated entries on images");
                 let images = yield this.checkUserImages(request.images);
                 // if user gives one image 
                 // checks if the image has already an inference
@@ -152,6 +160,8 @@ class Controller {
     checkSetLabel(request) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                if (this.checkDuplicateEntries(request.images))
+                    return new Error("there are duplicated entries on images");
                 // the length of the labels must be equal to that of the images
                 if (request.images.length !== request.labels.length)
                     return new Error("labels length must be equal to images length");

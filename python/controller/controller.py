@@ -4,7 +4,7 @@ import json
 from dl_code import extract_and_predict_faces
 from jsonschema import validate
 from sklearn.metrics import confusion_matrix
-
+import math
 
 class Controller:
 
@@ -43,6 +43,7 @@ class Controller:
 
         def translate(k): return 0 if k == "Real" else 1
 
+
         # for each class
         # computes precision, recall, f1 score from the confusion matrix
         for index in ["Real", "Fake"]:
@@ -52,18 +53,29 @@ class Controller:
 
             prec[index] = round(cm[translate(index)][translate(
                 index)] / cm[:, translate(index)].sum(), 2)
+            
+            if math.isnan(prec[index]):
+                prec[index] = 0
+
+          
             rec[index] = round(cm[translate(index)][translate(
-                index)] / cm[translate(index)].sum(), 2)
-            f1[index] = round((2 * prec[index] * rec[index]) /
-                              (prec[index] + rec[index]), 2)
-
-            import math
-
-            values[index]["precision"] = prec[index] if not math.isnan(
-                prec[index]) else 0.0
+                    index)] / cm[translate(index)].sum(), 2)
+            
+            if math.isnan(rec[index]):
+                rec[index] = 0
+            
+            f1_denominator = prec[index] + rec[index]
+            
+            if f1_denominator != 0:
+              f1[index] = round((2 * prec[index] * rec[index]) /
+                              (f1_denominator), 2)
+            else:
+              f1[index] = 0
+        
+          
+            values[index]["precision"] = prec[index]
             values[index]["recall"] = rec[index]
-            values[index]["f1"] = f1[index] if not math.isnan(
-                prec[index]) else 0.0
+            values[index]["f1"] = f1[index] 
 
         result = {"cm": cm.tolist(), "values": values,
                   "validUUID": images_for_metrics["UUIDList"]}

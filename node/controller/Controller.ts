@@ -19,6 +19,13 @@ export class Controller {
     this.user = user;
   }
 
+  // checks if a list contains duplicated entries
+  private checkDuplicateEntries(list:Array<any>): boolean{
+    if ([...new Set(list)].length !== list.length)
+      return true;
+    return false;
+  }
+
   // from a list of Models and an original list
   // checks which model attributes are not in the original list
   private showNotAuthorizedItems(
@@ -37,6 +44,7 @@ export class Controller {
 
     throw new Error(difference.join(",") + ` id(s) are not accessible`);
   }
+
 
   // checks if dataset id is owned by the authenticated user
   // returns the datasets found
@@ -133,6 +141,11 @@ export class Controller {
   // returns the results of the inference done by the CNN model
   async checkDoInference(request: any): Promise<Object | Error> {
     try {
+
+      if (this.checkDuplicateEntries(request.images))
+        return new Error("there are duplicated entries on images");
+      
+
       let images = await this.checkUserImages(request.images);
 
       // if user gives one image 
@@ -158,6 +171,9 @@ export class Controller {
   // sets labels (real, fake) to the list of images
   async checkSetLabel(request: any): Promise<Array<Object> | Error> {
     try {
+
+      if (this.checkDuplicateEntries(request.images))
+        return new Error("there are duplicated entries on images");
 
       // the length of the labels must be equal to that of the images
       if (request.images.length !== request.labels.length)

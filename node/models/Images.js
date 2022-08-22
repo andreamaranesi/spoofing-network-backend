@@ -38,8 +38,8 @@ Image.init({
         type: sequelize_1.DataTypes.STRING(100),
         validate: {
             notEmpty: { msg: "image fileName must be not empty" },
-            max: {
-                args: [100],
+            len: {
+                args: [0, 100],
                 msg: "image file name must be <= 100 characters (extension included)",
             },
         },
