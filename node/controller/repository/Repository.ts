@@ -37,8 +37,9 @@ export class Repository {
     // creates the dataset on the database
     let dataset = await Dataset.create(datasetJson);
 
-    // create tags
-    let createdTags = await this.createTags(tags, dataset.id);
+    // creates tags
+    // removes duplicated tags
+    let createdTags = await this.createTags([... new Set(tags)], dataset.id);
 
     return { dataset: dataset, tags: createdTags };
   }
@@ -56,6 +57,7 @@ export class Repository {
         tag = tag as string;
         if (tag != "") {
           tag = { tag: tag, datasetId: datasetId };
+
           list.push(
             (await DatasetTag.findOrCreate({ where: tag, defaults: tag }))[0]
           );
@@ -77,6 +79,10 @@ export class Repository {
     // updates tags if not undefined
     // deletes tags if new tags have been defined
     if (datasetJson.tags !== undefined) {
+
+      // remove duplicated entries
+      datasetJson.tags = [... new Set(datasetJson.tags)];
+
       await DatasetTag.destroy({ where: { datasetId: dataset.id } });
       createdTags = await this.createTags(datasetJson.tags, dataset.id);
     } else {
@@ -235,7 +241,11 @@ export class Repository {
           return {};
         })
         .catch((err) => {
-          throw new Error(err);
+          // if it is an axios error
+          if(err.response !== undefined){
+            throw new Error("unreadable url");
+          }
+          throw new Error(err.message);
         });
     } else {
 
@@ -314,7 +324,7 @@ export class Repository {
   // returns the list of datasets found
   async getDatasetList(filters: any): Promise<Array<Dataset>> {
     let tags = filters.tags;
-    let date = [filters.startDate, filters.endDate];
+    let date = [filters.startDate, filters.endDate]; 
     let tagRelationship = filters.tagRelationship ?? "or";
 
     // returns filter operator and value
@@ -353,6 +363,7 @@ export class Repository {
     ];
 
     if (tags !== undefined) {
+
       // to remove duplicated entries
       tags = [...new Set(tags)];
 
@@ -369,11 +380,8 @@ export class Repository {
 
     // final Sequelize filtering options
     const FILTER_OPTION: FindOptions = {
-      attributes: {
-        exclude: ["test"],
-      },
       where: {
-        userId: this.user.id,
+        userId: this.user.id
       },
       include: includeOptions,
     };
@@ -400,6 +408,7 @@ export class Repository {
   // if some images can't be inferred, chargebacks the cost
   // returns json of predictions and metrics
   async getInference(images: Array<Image>, cost: number): Promise<Object> {
+
     await this.updateUserTokenByCost(this.user, cost * images.length);
 
     // create JSON for python backend
@@ -423,6 +432,7 @@ export class Repository {
         }
       )
       .then(async (res) => {
+
         let data = res.data;
 
         let invalidImages = data.invalidPredictions;

@@ -40,8 +40,9 @@ class Repository {
             datasetJson.userId = this.user.id;
             // creates the dataset on the database
             let dataset = yield Dataset_1.Dataset.create(datasetJson);
-            // create tags
-            let createdTags = yield this.createTags(tags, dataset.id);
+            // creates tags
+            // removes duplicated tags
+            let createdTags = yield this.createTags([...new Set(tags)], dataset.id);
             return { dataset: dataset, tags: createdTags };
         });
     }
@@ -72,6 +73,8 @@ class Repository {
             // updates tags if not undefined
             // deletes tags if new tags have been defined
             if (datasetJson.tags !== undefined) {
+                // remove duplicated entries
+                datasetJson.tags = [...new Set(datasetJson.tags)];
                 yield DatasetTag_1.DatasetTag.destroy({ where: { datasetId: dataset.id } });
                 createdTags = yield this.createTags(datasetJson.tags, dataset.id);
             }
@@ -203,7 +206,11 @@ class Repository {
                     return {};
                 }))
                     .catch((err) => {
-                    throw new Error(err);
+                    // if it is an axios error
+                    if (err.response !== undefined) {
+                        throw new Error("unreadable url");
+                    }
+                    throw new Error(err.message);
                 });
             }
             else {
@@ -305,11 +312,8 @@ class Repository {
             }
             // final Sequelize filtering options
             const FILTER_OPTION = {
-                attributes: {
-                    exclude: ["test"],
-                },
                 where: {
-                    userId: this.user.id,
+                    userId: this.user.id
                 },
                 include: includeOptions,
             };
