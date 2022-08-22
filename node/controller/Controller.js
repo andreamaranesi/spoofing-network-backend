@@ -32,7 +32,7 @@ class Controller {
     }
     // from a list of Models and an original list
     // checks which model attributes are not in the original list
-    showNotAuthorizedItems(list, originalList, key, modelName) {
+    showNotAuthorizedItems(list, originalList, key) {
         let ids = [];
         for (let result of list) {
             ids.push(result[key]);
@@ -52,7 +52,7 @@ class Controller {
             });
             // if the dataset wasn't found
             if (results.length === 0)
-                this.showNotAuthorizedItems(results, [datasetId], "id", "dataset");
+                this.showNotAuthorizedItems(results, [datasetId], "id");
             return results;
         });
     }
@@ -147,7 +147,7 @@ class Controller {
             }
             // if images found are less than provided list
             if (images.length !== imageIds.length)
-                this.showNotAuthorizedItems(images, imageIds, "UUID", "images");
+                this.showNotAuthorizedItems(images, imageIds, "UUID");
             return images;
         });
     }

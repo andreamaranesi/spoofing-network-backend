@@ -29,8 +29,7 @@ export class Controller {
   private showNotAuthorizedItems(
     list: any,
     originalList: Array<any>,
-    key: string,
-    modelName: string
+    key: string
   ): void {
     let ids: Array<any> = [];
     for (let result of list) {
@@ -54,7 +53,7 @@ export class Controller {
 
     // if the dataset wasn't found
     if (results.length === 0)
-      this.showNotAuthorizedItems(results, [datasetId], "id", "dataset");
+      this.showNotAuthorizedItems(results, [datasetId], "id");
 
     return results;
   }
@@ -152,7 +151,7 @@ export class Controller {
 
     // if images found are less than provided list
     if (images.length !== imageIds.length)
-      this.showNotAuthorizedItems(images, imageIds, "UUID", "images");
+      this.showNotAuthorizedItems(images, imageIds, "UUID");
 
     return images;
   }
@@ -185,6 +184,7 @@ export class Controller {
       const COST = parseFloat(process.env.INFERENCE_COST);
 
       return await this.repository.getInference(images, COST);
+      
     } catch (err) {
       return new Error(err.message);
     }
