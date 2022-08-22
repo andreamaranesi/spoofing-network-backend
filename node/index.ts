@@ -65,6 +65,7 @@ app.get(
   "/create/dataset",
   body("name")
     .exists()
+    .isString()
     .isLength({ max: 50 })
     .withMessage("dataset name must be <= 50 characters"),
   body("numClasses").exists().isInt(),
@@ -88,6 +89,12 @@ app.get(
 app.get(
   "/update/dataset",
   body("datasetId").isInt(),
+  body("name")
+    .optional()
+    .exists()
+    .isString()
+    .isLength({ max: 50 })
+    .withMessage("dataset name must be <= 50 characters"),
   validateTags,
   oneOf([
     body("name").exists(),
@@ -167,7 +174,9 @@ app.get(
   "/set/token",
   isAdmin,
   body("email").isEmail(),
-  body("token").isFloat({max:100000}).withMessage("token amount must be less than 100000"),
+  body("token")
+    .isFloat({ max: 100000 })
+    .withMessage("token amount must be less than 100000"),
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
@@ -240,24 +249,20 @@ app.use(fileUpload());
 
 // route to insert images to a dataset by a form
 // file must be a supported image or a .zip of supported images
-app.post(
-  "/images/file",
-  body("datasetId").isInt(),
-  async function (req, res) {
-    let error = checkValidation(res, validationResult(req));
-    if (error !== null) sendValidationError(res, error);
-    else {
-      let controller = new Controller(req.user);
-      const RESULT = await controller.checkInsertImagesFromFile(
-        req.files,
-        req.body
-      );
-      if (RESULT instanceof Error)
-        res.status(500).send({ error: RESULT.message });
-      else res.json(RESULT);
-    }
+app.post("/images/file", body("datasetId").isInt(), async function (req, res) {
+  let error = checkValidation(res, validationResult(req));
+  if (error !== null) sendValidationError(res, error);
+  else {
+    let controller = new Controller(req.user);
+    const RESULT = await controller.checkInsertImagesFromFile(
+      req.files,
+      req.body
+    );
+    if (RESULT instanceof Error)
+      res.status(500).send({ error: RESULT.message });
+    else res.json(RESULT);
   }
-);
+});
 
 app.listen(
   process.env.NODE_PORT || 3000,
