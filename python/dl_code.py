@@ -13,12 +13,12 @@ final_x = 32
 final_y = 32
 dim = (final_x, final_y)
 
-face_confidence = 0.16
+face_confidence = 0.56
 
 # reads the model
 model = tf.keras.models.load_model(savedModel)
 
-# read the labels
+# reads the labels
 le = pickle.loads(open(save_labels, "rb").read())
 
 # model to extract faces
@@ -85,8 +85,6 @@ def detect_save_face(frame, output_path=None, multiple_output=False):
     return faces, coordinates
 
 # resize and normalize image
-
-
 def resize_normalize_image(image, max_value=255):
 
     image = cv2.resize(image, dim)
@@ -122,7 +120,7 @@ def extract_and_predict_faces(image):
             face = np.expand_dims(face, axis=0)
 
             try:
-
+              
                 preds = model(face)[0]
                 j = np.argmax(preds)
                 label = le.classes_[j]
