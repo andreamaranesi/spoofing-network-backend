@@ -4,7 +4,9 @@ exports.Dataset = void 0;
 const sequelize_1 = require("sequelize");
 const DatabaseSingleton_1 = require("../controller/repository/DatabaseSingleton");
 const User_1 = require("./User");
-// Dataset Model
+/**
+ * Dataset Model
+ */
 class Dataset extends sequelize_1.Model {
 }
 exports.Dataset = Dataset;
@@ -18,7 +20,7 @@ Dataset.init({
         validate: {
             isNumeric: {
                 msg: "dataset id must be a number",
-            }
+            },
         },
     },
     name: {
@@ -40,7 +42,7 @@ Dataset.init({
             },
             isNumeric: {
                 msg: "number of classes must be a number",
-            }
+            },
         },
     },
     creationDate: {
@@ -49,7 +51,7 @@ Dataset.init({
     },
     isDeleted: {
         type: sequelize_1.DataTypes.BOOLEAN,
-        allowNull: true
+        allowNull: true,
     },
     userId: {
         type: sequelize_1.DataTypes.INTEGER,
@@ -64,4 +66,11 @@ Dataset.init({
     modelName: "Dataset",
     tableName: "dataset",
     timestamps: false,
+    scopes: {
+        visible: {
+            where: {
+                isDeleted: false,
+            },
+        },
+    },
 });

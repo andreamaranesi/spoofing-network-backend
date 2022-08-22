@@ -3,7 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const sequelize_1 = require("sequelize");
 const DatabaseSingleton_1 = require("../controller/repository/DatabaseSingleton");
-// User Model
+/*
+ User Model
+*/
 class User extends sequelize_1.Model {
 }
 exports.User = User;
@@ -17,15 +19,18 @@ User.init({
     },
     email: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     userName: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     token: {
         type: sequelize_1.DataTypes.DECIMAL,
         allowNull: false,
+        get() {
+            return parseFloat(this.getDataValue("token"));
+        },
         validate: {
             min: {
                 args: [0],
@@ -33,16 +38,16 @@ User.init({
             },
             isNumeric: {
                 msg: "token must be numeric",
-            }
+            },
         },
     },
     isAdmin: {
         type: sequelize_1.DataTypes.BOOLEAN,
-        allowNull: false
-    }
+        allowNull: false,
+    },
 }, {
     sequelize,
-    modelName: 'User',
-    tableName: 'user',
-    timestamps: false
+    modelName: "User",
+    tableName: "user",
+    timestamps: false,
 });

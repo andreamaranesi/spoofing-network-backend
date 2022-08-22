@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from controller.controller import Controller
 import os
 
@@ -25,9 +25,8 @@ def predict():
     except:
         return "Json malformed"
     
-    predictions = controller.getPredictions(jsonRequest)
-    return predictions
+    predictions = controller.get_predictions(jsonRequest)
+    return jsonify(predictions)
     
 
 app.run(host=hostName, port=serverPort)
-

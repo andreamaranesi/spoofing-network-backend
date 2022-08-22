@@ -1,39 +1,33 @@
 import { Dataset } from "../models/Dataset";
-import { DatasetTag } from "../models/DatasetTag";
 import { User } from "../models/User";
 import { Repository } from "./repository/Repository";
-import { Op, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import { Image } from "../models/Images";
 
 /**
- * manage and check user routes
+ * manages and checks user routes
  */
 export class Controller {
+
   // controller interacts with the repository for CRUD operations
   private repository: Repository;
   private user: User;
 
-  // instantiate the repository
+  // instantiates the repository
   constructor(user: User) {
     this.repository = new Repository(user);
     this.user = user;
   }
 
-  // take a list of functions to be executed as a validation pipeline
-  private validatonPipeline(...functions: Array<Function>): Function {
-    return (...argument: Array<any>) =>
-      functions.reduce(
-        (previous, next: any, currentIndex) => next(argument[currentIndex]),
-        undefined
-      );
-  }
-
+  // from a list of Models and an original list
+  // checks which model attributes are not in the original list
   private showNotAuthorizedItems(
     list: any,
     originalList: Array<any>,
     key: string,
     modelName: string
   ): void {
+
     let ids: Array<any> = [];
     for (let result of list) {
       ids.push(result[key]);
@@ -44,35 +38,24 @@ export class Controller {
     throw new Error(difference.join(",") + ` id(s) are not accessible`);
   }
 
-  // request must contains a list of dataset ids
-  // check if dataset ids are owned by the authenticated user
-  async checkUserDataset(
-    datasetId: number,
-    userId: number
-  ): Promise<Array<Dataset>> {
-    let results = await Dataset.findAll({
+  // checks if dataset id is owned by the authenticated user
+  // returns the datasets found
+  async checkUserDataset(datasetId: number): Promise<Array<Dataset>> {
+    let results = await Dataset.scope("visible").findAll({
       where: {
-        [Op.and]: [
-          {
-            id: {
-              [Op.eq]: datasetId,
-            },
-          },
-          {
-            userId: userId,
-          },
-        ],
+        id: datasetId,
+        userId: this.user.id,
       },
     });
 
+    // if the dataset wasn't found
     if (results.length === 0)
       this.showNotAuthorizedItems(results, [datasetId], "id", "dataset");
 
     return results;
   }
 
-  // dataset_json must contains all the required dataset attributes
-  // return a new Dataset instance
+  // returns a new dataset instance
   async checkCreateDataset(datasetJson: any): Promise<Object | Error> {
     try {
       return await this.repository.createDataset(datasetJson);
@@ -81,14 +64,12 @@ export class Controller {
     }
   }
 
-  // dataset_json must contains the dataset_id key
-  // check if dataset id is owned by the authenticated user
+  // checks if dataset id is owned by the authenticated user
+  // updates the dataset
+  // returns the updated dataset
   async checkUpdateDataset(datasetJson: any): Promise<Object | Error> {
     try {
-      let dataset = await this.checkUserDataset(
-        datasetJson.datasetId,
-        this.user.id
-      );
+      let dataset = await this.checkUserDataset(datasetJson.datasetId);
 
       delete datasetJson.datasetId;
 
@@ -98,34 +79,20 @@ export class Controller {
     }
   }
 
-  // validate filter request
-  // return a list of Dataset filtering by date of creation and/or associated tags
+  // checks if dataset id is owned by the authenticated user
+  // returns a list of Dataset filtering by date of creation and/or associated tags
   async checkGetDataset(filters: any): Promise<Array<Object> | Error> {
     try {
-      let filterList = ["creationDate", "tags"];
-      let filterKeys = Object.keys(filters);
-
-      // remove invalid json keys
-      // the user can add other json properties, but they will deleted from the request
-      for (let invalidKey of filterKeys.filter(
-        (key) => !filterList.includes(key)
-      )) {
-        delete filters[invalidKey];
-      }
-
       return await this.repository.getDatasetList(filters);
     } catch (error) {
       return new Error(error.message);
     }
   }
 
-  // request must contains a list of uuids of images
-  // check if images are owned by the authenticated user
-  async checkUserImages(
-    imageIds: Array<any>,
-    userId: number
-  ): Promise<Array<Image>> {
-    let datasets = await Dataset.findAll({
+  // checks if images are owned by the authenticated user
+  // returns the list of images found
+  async checkUserImages(imageIds: Array<any>): Promise<Array<Image>> {
+    let datasets = await Dataset.scope("visible").findAll({
       attributes: ["id"],
       include: {
         model: Image,
@@ -137,11 +104,11 @@ export class Controller {
         },
       },
       where: {
-        userId: userId,
+        userId: this.user.id,
       },
     });
 
-
+    // retrieves images inside the dataset array
     let images: Array<Image> = [];
     for (let dataset of datasets) {
       for (let image of dataset["Images"]) {
@@ -149,73 +116,149 @@ export class Controller {
       }
     }
 
+    // if images found are less than given list
     if (images.length !== imageIds.length)
       this.showNotAuthorizedItems(images, imageIds, "UUID", "images");
 
     return images;
   }
 
-  // check if user tokens are >= amount
-  async checkUserToken(amount: any): Promise<boolean | Error> {
+  // returns the current user token amount
+  getUserToken(): Object {
+    return { token: this.user.token };
+  }
+
+  // request must contains a list of uuids of images
+  // checks if images are owned by the authenticated user
+  // returns the results of the inference done by the CNN model
+  async checkDoInference(request: any): Promise<Object | Error> {
     try {
-      await this.checkUserImages(amount.images, this.user.id);
+      let images = await this.checkUserImages(request.images);
+
+      // if user gives one image 
+      // checks if the image has already an inference
+      if (images.length === 1) {
+        if (images[0].inference !== null) {
+          return new Error(
+            `image id ${images[0].UUID} has already an inference: ${images[0].inference}`
+          );
+        }
+      }
+
+      const COST = parseFloat(process.env.INFERENCE_COST);
+
+      return await this.repository.getInference(images, COST);
     } catch (err) {
       return new Error(err.message);
     }
   }
 
-  // request must contains a list of uuids of images
-  // check if images are owned by the authenticated user
-  // return the results of the inference done by the CNN model
-  checkDoInference(request: Object): string {}
-
   // request must contains a list of uuids of images and associated labels
-  // check if images are owned by the authenticated user
-  checkSetLabel(request: Object): Array<Dataset> {}
+  // checks if images are owned by the authenticated user
+  // sets labels (real, fake) to the list of images
+  async checkSetLabel(request: any): Promise<Array<Object> | Error> {
+    try {
 
-  // check if images are owned by the authenticated user
-  checkDeleteDataset(datasetId: number): boolean {}
+      // the length of the labels must be equal to that of the images
+      if (request.images.length !== request.labels.length)
+        return new Error("labels length must be equal to images length");
+
+      let images = await this.checkUserImages(request.images);
+
+      const COST = parseFloat(process.env.LABEL_COST);
+
+      this.repository.checkUserToken(this.user, COST * images.length);
+
+      return await this.repository.setLabel(images, request.labels, COST);
+    } catch (err) {
+      return new Error(err.message);
+    }
+  }
+
+  // checks if dataset is owned by the authenticated user
+  // deletes (logically) the dataset
+  async checkDeleteDataset(request: any): Promise<Object | Error> {
+    try {
+      let dataset = await this.checkUserDataset(request.datasetId);
+
+      return await this.repository.deleteDataset(dataset[0]);
+    } catch (err) {
+      return new Error(err.message);
+    }
+  }
+
+  // updates a specified user token
+  async checkSetToken(request: any): Promise<Object | Error> {
+    try {
+      let userToUpdate = await User.findOne({
+        where: {
+          email: request.email,
+        },
+      });
+
+      if (userToUpdate === null)
+        throw new Error(`user with email ${request.email} doesn't exist`);
+
+      return await this.repository.updateUserToken(userToUpdate, request.token);
+    } catch (err) {
+      return new Error(err.message);
+    }
+  }
 
   // file is an image or a .zip of images
-  // check if dataset id is owned by the authenticated user
-  // insert images in that dataset
+  // checks if dataset id is owned by the authenticated user
+  // inserts images in the dataset
   async checkInsertImagesFromFile(
     file: any,
     request: any
   ): Promise<Object | Error> {
-    if (file.images === undefined)
-      return new Error("an image or .zip must be given");
+    try {
+      if (file.images === undefined)
+        return new Error("an image or .zip must be given");
 
+      await this.checkUserDataset(request.datasetId);
 
-    await this.checkUserDataset(request.datasetId, this.user.id);
+      file = file.images;
 
-    file = file.images;
-    let mimetype = file.mimetype;
+      const IS_VALID_FILE = Image.isValidMimetype(file.mimetype);
 
-    const isValidFile = Image.isValidMimetype(mimetype);
+      let cost = parseFloat(process.env.INSERT_IMAGE_COST);
 
-    if (isValidFile) {
-      let uuids = await this.repository.saveImage(file, request.datasetId);
-      if (Object.keys(uuids).length === 0)
-        return new Error("no images was valid");
-      return uuids;
+      if (IS_VALID_FILE) {
+        let uuids = await this.repository.saveImage(
+          file,
+          request.datasetId,
+          cost
+        );
+        if (Object.keys(uuids).length === 0)
+          return new Error("no images was valid");
+        return uuids;
+      }
+
+      return new Error("file must be an image or a .zip of images");
+    } catch (err) {
+      return new Error(err.message);
     }
-
-    return new Error("file must be an image or a .zip of images");
-    //return await this.repository.createDataset(datasetJson);
   }
 
   // request must contains a public url of an image or a .zip file, and the related dataset id
-  // check if images are owned by the authenticated user
-  // insert images in that dataset
+  // checks if dataset id is owned by the authenticated user
+  // inserts images in the dataset
   async checkInsertImagesFromUrl(request: any): Promise<any> {
-    await this.checkUserDataset(request.datasetId, this.user.id);
+    try {
+      await this.checkUserDataset(request.datasetId);
 
-    return await this.repository.saveImage(
-      null,
-      request.datasetId,
-      request.url,
-      request.singleImageName
-    );
+      let cost = parseFloat(process.env.INSERT_IMAGE_COST);
+
+      return await this.repository.saveImage(
+        null,
+        request.datasetId,
+        cost,
+        request.url,
+        request.singleImageName
+      );
+    } catch (err) {
+      return new Error(err.message);
+    }
   }
 }

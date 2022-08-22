@@ -5,7 +5,7 @@ CREATE TABLE user(
     userName varchar(50) NOT NULL,
     email varchar(50) UNIQUE NOT NULL,
     id INT AUTO_INCREMENT NOT NULL,
-    token decimal(8,2) NOT NULL,
+    token DECIMAL(8,2) UNSIGNED NOT NULL,
     isAdmin BOOLEAN NOT NULL,
     PRIMARY KEY(id) 
 );
@@ -40,7 +40,7 @@ CREATE TABLE datasetTag(
 
 INSERT INTO user(userName, email, token, isAdmin)
     VALUES
-    ('alessandro', 'alex@email.com', 100, false),
+    ('alessandro', 'alex@email.com', 500, false),
     ('andrea', 'andrea@email.com', 100.01, true),
     ('adriano', 'adriano@email.com', 1000, true);
 

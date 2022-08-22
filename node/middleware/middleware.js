@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.errorHandler = exports.verifyAndAuthenticate = exports.checkToken = void 0;
+exports.isAdmin = exports.errorHandler = exports.verifyTokenAmount = exports.verifyAndAuthenticate = exports.checkToken = void 0;
 const User_1 = require("../models/User");
 const jwt = require("jsonwebtoken");
 // check the Authorization token is not empty
@@ -29,6 +29,9 @@ const verifyAndAuthenticate = (req, res, next) => __awaiter(void 0, void 0, void
     try {
         let decoded = jwt.verify(req.token, process.env.JWT_SECRET_KEY);
         req.user = yield User_1.User.findOne({ where: { email: decoded.email } });
+        // check if user exists
+        if (req.user === null)
+            next(new Error(`user with email ${req.user.email} doesn't exist`));
     }
     catch (error) {
         if (typeof error === "object")
@@ -42,8 +45,25 @@ const verifyAndAuthenticate = (req, res, next) => __awaiter(void 0, void 0, void
     next();
 });
 exports.verifyAndAuthenticate = verifyAndAuthenticate;
+// validate the token amount of the default user
+const verifyTokenAmount = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.user.token == 0 && !req.user.isAdmin) {
+        res.status(401).send({ error: "Token amount is 0" });
+    }
+    else
+        next();
+});
+exports.verifyTokenAmount = verifyTokenAmount;
 // send back the error message
 const errorHandler = (err, req, res, next) => {
-    res.status(500).send({ error: err.message });
+    res.status(401).send({ error: err.message });
 };
 exports.errorHandler = errorHandler;
+// check if the user is the admin
+const isAdmin = (req, res, next) => {
+    if (!req.user.isAdmin)
+        res.status(401).send({ error: "user must be the admin" });
+    else
+        next();
+};
+exports.isAdmin = isAdmin;

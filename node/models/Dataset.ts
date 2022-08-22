@@ -1,10 +1,10 @@
 import { DataTypes, Model } from "sequelize";
 import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
-import { DatasetTag } from "./DatasetTag";
-import { Image } from "./Images";
 import { User } from "./User";
 
-// Dataset Model
+/**
+ * Dataset Model
+ */
 export class Dataset extends Model {
   declare id: number; // this is ok! The 'declare' keyword ensures this field will not be emitted by TypeScript.
   declare datasetName: string;
@@ -27,8 +27,8 @@ Dataset.init(
       primaryKey: true,
       validate: {
         isNumeric: {
-            msg: "dataset id must be a number",
-        }
+          msg: "dataset id must be a number",
+        },
       },
     },
     name: {
@@ -49,8 +49,8 @@ Dataset.init(
           msg: "number of classes must be >= 1",
         },
         isNumeric: {
-            msg: "number of classes must be a number",
-        }
+          msg: "number of classes must be a number",
+        },
       },
     },
     creationDate: {
@@ -59,7 +59,7 @@ Dataset.init(
     },
     isDeleted: {
       type: DataTypes.BOOLEAN,
-      allowNull: true
+      allowNull: true,
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -75,5 +75,12 @@ Dataset.init(
     modelName: "Dataset",
     tableName: "dataset",
     timestamps: false,
+    scopes: {
+      visible: {
+        where: {
+          isDeleted: false,
+        },
+      },
+    },
   }
 );

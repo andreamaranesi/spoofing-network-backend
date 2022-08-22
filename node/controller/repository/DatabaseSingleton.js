@@ -2,7 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseSingleton = void 0;
 const sequelize_1 = require("sequelize");
+/**
+ * instantiates the database connection
+ */
 class DatabaseSingleton {
+    // returns the database connection instance
     static setPool() {
         const db_name = process.env.DB_NAME || "dataset";
         const db_username = process.env.MYSQL_USER || "root";

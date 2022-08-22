@@ -1,8 +1,12 @@
 import { Sequelize } from "sequelize";
 
+/**
+ * instantiates the database connection
+ */
 export class DatabaseSingleton {
   private static pool: Sequelize;
 
+  // returns the database connection instance
   private static setPool(){
     const db_name = process.env.DB_NAME || "dataset";
     const db_username = process.env.MYSQL_USER || "root";

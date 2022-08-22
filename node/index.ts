@@ -2,119 +2,259 @@ import { Controller } from "./controller/Controller";
 import {
   checkToken,
   verifyAndAuthenticate,
+  verifyTokenAmount,
   errorHandler,
+  isAdmin,
 } from "./middleware/middleware";
 import * as fileUpload from "express-fileupload";
-import { check, body, oneOf, validationResult } from "express-validator";
-import { getSystemErrorMap } from "util";
+import { body, oneOf, validationResult } from "express-validator";
 
 var express = require("express");
 var app = express();
 
 app.use(checkToken);
 app.use(verifyAndAuthenticate);
+app.use(verifyTokenAmount);
 app.use(errorHandler);
+
+app.get("/get/token", async function (req, res) {
+  let controller = new Controller(req.user);
+  const RESULT = controller.getUserToken();
+  if (RESULT instanceof Error) res.status(500).send({ error: RESULT.message });
+  else res.json(RESULT);
+});
 
 app.use(express.json());
 
-const checkValidation = function(res, errors){
-  if (!errors.isEmpty()) 
-    return res.status(400).json({ errors: errors.array() });
-  
-}
 
+// validate json data
+const checkValidation = function (res, errors) {
+  if (!errors.isEmpty()) return errors;
+
+  return null;
+};
+
+// send back validation errors
+const sendValidationError = function (res, errors) {
+  res.status(500).send({ error: errors.array() });
+};
+
+
+const validateListImages = [
+  body("images")
+    .isArray()
+    .notEmpty()
+    .withMessage("images must be a list of id"),
+  body("images.*").isNumeric().withMessage("image id must be numeric"),
+];
+
+const validateTags = [
+  body("tags")
+    .optional()
+    .isArray()
+    .notEmpty()
+    .withMessage("tags must be a list of string"),
+  body("tags.*").optional().isString().withMessage("tag must be a string"),
+];
+
+// route to create a new dataset
 app.get(
   "/create/dataset",
   body("name").exists(),
   body("numClasses").exists(),
-  body("tags").optional().isString(),
-  body("tags.*").optional().isString().withMessage("tag must be a string"),
+  validateTags,
   async function (req, res) {
-    
-    checkValidation(res, validationResult(req));
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      checkValidation(res, validationResult(req));
 
-    console.log("Ok");
-    
-
-    let controller = new Controller(req.user);
-    const dataset = await controller.checkCreateDataset(req.body);
-    if (dataset instanceof Error)
-      res.status(500).send({ error: dataset.message });
-    else res.json(dataset);
+      let controller = new Controller(req.user);
+      const DATASET = await controller.checkCreateDataset(req.body);
+      if (DATASET instanceof Error)
+        res.status(500).send({ error: DATASET.message });
+      else res.json(DATASET);
+    }
   }
 );
 
+// route to update a dataset
 app.get(
   "/update/dataset",
   body("datasetId").isNumeric(),
-  body("tags").optional().isString(),
-  body("tags.*").optional().isString().withMessage("tag must be a string"),
+  validateTags,
   oneOf([
     body("name").exists(),
     body("numClasses").exists(),
     body("tags").exists(),
   ]),
   async function (req, res) {
-
-    checkValidation(res, validationResult(req));
-
-    console.log("Ok");
-
-    console.log(req.user);
-    let controller = new Controller(req.user);
-    const response = await controller.checkUpdateDataset(req.body);
-    if (response instanceof Error)
-      res.status(500).send({ error: response.message });
-    else res.send(response);
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const DATASET = await controller.checkUpdateDataset(req.body);
+      if (DATASET instanceof Error)
+        res.status(500).send({ error: DATASET.message });
+      else res.json(DATASET);
+    }
   }
 );
 
-app.get("/check/images", async function (req, res) {
-  console.log(req.user);
-  let controller = new Controller(req.user);
-  const response = await controller.checkUserToken(req.body);
-  if (response instanceof Error)
-    res.status(500).send({ error: response.message });
-  else res.send(response);
+// route to logically delete a dataset
+app.get(
+  "/delete/dataset",
+  body("datasetId").isNumeric(),
+  async function (req, res) {
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const DATASET = await controller.checkDeleteDataset(req.body);
+      if (DATASET instanceof Error)
+        res.status(500).send({ error: DATASET.message });
+      else res.json(DATASET);
+    }
+  }
+);
+
+const EXPRESS_DATE_MESSAGE = "Date must be in the format DD-MM-YYYY";
+
+// route to filter datasets by tag and/or creation date
+app.get(
+  "/get/dataset",
+  body("startDate")
+    .optional()
+    .isDate({ format: "DD-MM-YYYY" })
+    .withMessage(EXPRESS_DATE_MESSAGE),
+  body("endDate")
+    .optional()
+    .isDate({ format: "DD-MM-YYYY" })
+    .withMessage(EXPRESS_DATE_MESSAGE),
+  body("tagRelationship")
+    .optional()
+    .toLowerCase()
+    .isIn(["and", "or"])
+    .withMessage("tag relationship can be 'or','and'"),
+  validateTags,
+  oneOf([
+    body("startDate").exists(),
+    body("endDate").exists(),
+    body("tags").exists(),
+  ]),
+  async function (req, res) {
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const DATASET = await controller.checkGetDataset(req.body);
+      if (DATASET instanceof Error)
+        res.status(500).send({ error: DATASET.message });
+      else res.json(DATASET);
+    }
+  }
+);
+
+// admin route
+// update a user token amount
+app.get(
+  "/set/token",
+  isAdmin,
+  body("email").isEmail(),
+  body("token").isNumeric(),
+  async function (req, res) {
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const RESULT = await controller.checkSetToken(req.body);
+      if (RESULT instanceof Error)
+        res.status(500).send({ error: RESULT.message });
+      else res.json(RESULT);
+    }
+  }
+);
+
+// route to get image inferences
+app.get("/get/inference", validateListImages, async function (req, res) {
+  let error = checkValidation(res, validationResult(req));
+  if (error !== null) sendValidationError(res, error);
+  else {
+    let controller = new Controller(req.user);
+    const RESULT = await controller.checkDoInference(req.body);
+    if (RESULT instanceof Error)
+      res.status(500).send({ error: RESULT.message });
+    else res.json(RESULT);
+  }
 });
 
+// route to set labels of images
+app.get(
+  "/set/label",
+  validateListImages,
+  body("labels").isArray(),
+  body("labels.*")
+    .toLowerCase()
+    .isIn(["real", "fake"])
+    .withMessage("label must be real or fake"),
+  async function (req, res) {
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const RESULT = await controller.checkSetLabel(req.body);
+      if (RESULT instanceof Error)
+        res.status(500).send({ error: RESULT.message });
+      else res.json(RESULT);
+    }
+  }
+);
+
+// route to insert images to a dataset by an url
+// url must be a supported image or a .zip of supported images
 app.get(
   "/images/url",
   body("url").isURL(),
-  body("databaseId").isNumeric(),
+  body("datasetId").isNumeric(),
   async function (req, res) {
-
-    checkValidation(res, validationResult(req));
-
-    let controller = new Controller(req.user);
-    const response = await controller.checkInsertImagesFromUrl(req.body);
-    if (response instanceof Error)
-      res.status(500).send({ error: response.message });
-    else res.json(response);
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const RESULT = await controller.checkInsertImagesFromUrl(req.body);
+      if (RESULT instanceof Error)
+        res.status(500).send({ error: RESULT.message });
+      else res.json(RESULT);
+    }
   }
 );
 
-
 app.use(fileUpload());
 
+// route to insert images to a dataset by a form
+// file must be a supported image or a .zip of supported images
 app.post(
   "/images/file",
   body("datasetId").isNumeric(),
   async function (req, res) {
-
-    checkValidation(res, validationResult(req));
-
-    console.log(req.files);
-    let controller = new Controller(req.user);
-    const response = await controller.checkInsertImagesFromFile(
-      req.files,
-      req.body
-    );
-    if (response instanceof Error)
-      res.status(500).send({ error: response.message });
-    else res.json(response);
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const RESULT = await controller.checkInsertImagesFromFile(
+        req.files,
+        req.body
+      );
+      if (RESULT instanceof Error)
+        res.status(500).send({ error: RESULT.message });
+      else res.json(RESULT);
+    }
   }
 );
 
-app.listen(3000, "0.0.0.0");
-console.log("avviato");
+app.listen(
+  process.env.NODE_PORT || 3000,
+  process.env.NODE_INTERFACE || "0.0.0.0"
+);
+
+console.log("node started");

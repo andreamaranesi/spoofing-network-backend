@@ -4,7 +4,9 @@ exports.DatasetTag = void 0;
 const sequelize_1 = require("sequelize");
 const DatabaseSingleton_1 = require("../controller/repository/DatabaseSingleton");
 const Dataset_1 = require("./Dataset");
-// Tag Model
+/*
+  Tag Model
+*/
 class DatasetTag extends sequelize_1.Model {
 }
 exports.DatasetTag = DatasetTag;
@@ -16,20 +18,26 @@ DatasetTag.init({
         primaryKey: true,
         references: {
             model: Dataset_1.Dataset,
-            key: 'id'
+            key: "id",
         },
     },
     tag: {
         type: sequelize_1.DataTypes.STRING(50),
-        primaryKey: true
-    }
+        primaryKey: true,
+    },
 }, {
     sequelize,
     timestamps: false,
     modelName: "DatasetTag",
     tableName: "datasetTag",
+    defaultScope: {
+        attributes: {
+            exclude: ["DatasetId"],
+        },
+    },
 });
+// one to many relationship
 Dataset_1.Dataset.hasMany(DatasetTag, {
-    foreignKey: 'datasetId',
+    foreignKey: "datasetId",
 });
 DatasetTag.belongsTo(Dataset_1.Dataset);
