@@ -208,7 +208,7 @@ web-node:
 
 **RESPONSE SCHEMA**
 
-```json
+```
 {
     "dataset": {
         "id": int,
@@ -250,7 +250,7 @@ web-node:
 
 **RESPONSE SCHEMA**
 
-```json
+```
 {
     "dataset": {
         "id": int,
@@ -282,7 +282,7 @@ web-node:
 
 **RESPONSE SCHEMA**:
 
-```json
+```
 {
     "deletedDataset": {
         "id": int,
@@ -323,7 +323,7 @@ web-node:
 
 **RESPONSE SCHEMA**:
 
-```json
+```
 [
     {
         "id": int,
@@ -383,7 +383,7 @@ filename will be truncated if > 100 characters
 
  `keys` are the filename of images, `values` their final id
 
-```json
+```
 {
     "filename":int,
     .....
@@ -420,7 +420,7 @@ filename will be truncated if > 100 characters
 
  `keys` are the filename of images, `values` their final id
 
-```json
+```
 {
     "filename":int,
     .....
@@ -446,7 +446,7 @@ filename will be truncated if > 100 characters
 
 **RESPONSE SCHEMA**
 
-```json
+```
 [
     {
         "UUID": int,
@@ -472,7 +472,7 @@ filename will be truncated if > 100 characters
 
 **RESPONSE SCHEMA**
 
-```json
+```
 {
     "imagePredictions": [
         {
@@ -516,7 +516,7 @@ filename will be truncated if > 100 characters
 
 **RESPONSE SCHEMA**
 
-```json
+```
 {
     "token": float
 }
@@ -539,7 +539,7 @@ filename will be truncated if > 100 characters
 
 **RESPONSE SCHEMA**
 
-```json
+```
 {
     "updatedUser": {
         "token": float,
