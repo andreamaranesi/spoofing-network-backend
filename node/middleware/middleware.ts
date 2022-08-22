@@ -20,12 +20,12 @@ export const verifyAndAuthenticate = async (req, res, next) => {
     // check if user exists
     if (req.user === null)
       next(new Error(`user with email ${req.user.email} doesn't exist`));
-      
+
   } catch (error) {
     if (typeof error === "object")
       if (error.name == "TokenExpiredError")
-        res.status(403).send({ error: "Token Expired" });
-      else res.status(403).send({ error: error.message });
+        res.status(401).send({ error: "Token Expired" });
+      else res.status(401).send({ error: error.message });
     else next(new Error(error));
   }
 

@@ -8,11 +8,6 @@ serverPort = os.environ.get('SERVER_PORT') or 8080
 app = Flask(__name__)
 controller = Controller()
 
-@app.route('/')
-def default():
-    isdir = os.path.isdir(os.environ.get('IMAGE_STORAGE'))
-    return "lo è: " + str(isdir)
-
 
 # Route for image prediction. 
 # Requires: a Json Body for the list of images to predict and the labels
