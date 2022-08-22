@@ -10,23 +10,19 @@ const Dataset_1 = require("./Dataset");
 class Image extends sequelize_1.Model {
     // check if a mimetype is supported
     static isValidMimetype(mimetype) {
-        return [
-            "application/zip",
-            "image/jpeg",
-            "image/jpg",
-            "image/gif",
-            "image/png",
-        ].some((element) => {
+        return ["application/zip", "image/jpeg", "image/jpg", "image/png"].some((element) => {
             if (mimetype === element)
                 return true;
             return false;
         });
     }
+    // returns the file extension from the filename
+    static fileExtension(name) {
+        return name.split(".").pop().toLowerCase();
+    }
 }
 exports.Image = Image;
 let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance();
-// will make the first letter of a string upper case, the remaining lower case
-const capitalize = (string) => string[0].toUpperCase() + string.slice(1).toLowerCase();
 // relationship with database
 Image.init({
     UUID: {
@@ -36,6 +32,17 @@ Image.init({
     },
     fileName: {
         type: sequelize_1.DataTypes.STRING(100),
+        set(value) {
+            // truncates the fileName so it will be equal to 100 character
+            const truncateFileName = (string) => {
+                if (value.length >= 100) {
+                    let extension = Image.fileExtension(value);
+                    return value.slice(0, 99 - extension.length) + "." + extension;
+                }
+                return value;
+            };
+            this.setDataValue("fileName", truncateFileName(value));
+        },
         validate: {
             notEmpty: { msg: "image fileName must be not empty" },
             len: {
@@ -48,6 +55,8 @@ Image.init({
         type: sequelize_1.DataTypes.STRING(50),
         allowNull: true,
         set(value) {
+            // makes the first letter of a string upper case, the remaining lower case
+            const capitalize = (string) => string[0].toUpperCase() + string.slice(1).toLowerCase();
             // Real or Fake
             this.setDataValue("label", capitalize(value));
         },

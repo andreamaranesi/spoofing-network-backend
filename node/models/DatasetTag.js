@@ -24,6 +24,12 @@ DatasetTag.init({
     tag: {
         type: sequelize_1.DataTypes.STRING(50),
         primaryKey: true,
+        validate: {
+            len: {
+                args: [0, 50],
+                msg: "tag must be less than 50 characters",
+            },
+        },
     },
 }, {
     sequelize,

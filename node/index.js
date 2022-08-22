@@ -45,7 +45,7 @@ const validateListImages = [
         .isArray()
         .notEmpty()
         .withMessage("images must be a list of id"),
-    (0, express_validator_1.body)("images.*").isNumeric().withMessage("image id must be numeric"),
+    (0, express_validator_1.body)("images.*").isInt().withMessage("image id must be an integer"),
 ];
 const validateTags = [
     (0, express_validator_1.body)("tags")
@@ -53,10 +53,18 @@ const validateTags = [
         .isArray()
         .notEmpty()
         .withMessage("tags must be a list of string"),
-    (0, express_validator_1.body)("tags.*").optional().isString().withMessage("tag must be a string"),
+    (0, express_validator_1.body)("tags.*")
+        .optional()
+        .isString()
+        .withMessage("tag must be a string")
+        .isLength({ max: 50 })
+        .withMessage("tag name must be <= 50 characters"),
 ];
 // route to create a new dataset
-app.get("/create/dataset", (0, express_validator_1.body)("name").exists(), (0, express_validator_1.body)("numClasses").exists(), validateTags, function (req, res) {
+app.get("/create/dataset", (0, express_validator_1.body)("name")
+    .exists()
+    .isLength({ max: 50 })
+    .withMessage("dataset name must be <= 50 characters"), (0, express_validator_1.body)("numClasses").exists().isInt(), validateTags, function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)
@@ -73,9 +81,9 @@ app.get("/create/dataset", (0, express_validator_1.body)("name").exists(), (0, e
     });
 });
 // route to update a dataset
-app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isNumeric(), validateTags, (0, express_validator_1.oneOf)([
+app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), validateTags, (0, express_validator_1.oneOf)([
     (0, express_validator_1.body)("name").exists(),
-    (0, express_validator_1.body)("numClasses").exists(),
+    (0, express_validator_1.body)("numClasses").exists().isInt(),
     (0, express_validator_1.body)("tags").exists(),
 ]), function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -93,7 +101,7 @@ app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isNumeric(
     });
 });
 // route to logically delete a dataset
-app.get("/delete/dataset", (0, express_validator_1.body)("datasetId").isNumeric(), function (req, res) {
+app.get("/delete/dataset", (0, express_validator_1.body)("datasetId").isInt(), function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)
@@ -141,7 +149,7 @@ app.get("/get/dataset", (0, express_validator_1.body)("startDate")
 });
 // admin route
 // update a user token amount
-app.get("/set/token", middleware_1.isAdmin, (0, express_validator_1.body)("email").isEmail(), (0, express_validator_1.body)("token").isNumeric(), function (req, res) {
+app.get("/set/token", middleware_1.isAdmin, (0, express_validator_1.body)("email").isEmail(), (0, express_validator_1.body)("token").isFloat({ max: 100000 }).withMessage("token amount must be less than 100000"), function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)
@@ -193,7 +201,7 @@ app.get("/set/label", validateListImages, (0, express_validator_1.body)("labels"
 });
 // route to insert images to a dataset by an url
 // url must be a supported image or a .zip of supported images
-app.get("/images/url", (0, express_validator_1.body)("url").isURL(), (0, express_validator_1.body)("datasetId").isNumeric(), function (req, res) {
+app.get("/images/url", (0, express_validator_1.body)("url").isURL(), (0, express_validator_1.body)("datasetId").isInt(), (0, express_validator_1.body)("singleImageName").optional().isString().exists(), function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)
@@ -211,7 +219,7 @@ app.get("/images/url", (0, express_validator_1.body)("url").isURL(), (0, express
 app.use(fileUpload());
 // route to insert images to a dataset by a form
 // file must be a supported image or a .zip of supported images
-app.post("/images/file", (0, express_validator_1.body)("datasetId").isNumeric(), function (req, res) {
+app.post("/images/file", (0, express_validator_1.body)("datasetId").isInt(), function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)

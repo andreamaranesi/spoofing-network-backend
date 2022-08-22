@@ -145,7 +145,7 @@ class Controller {
                     images.push(image);
                 }
             }
-            // if images found are less than given list
+            // if images found are less than provided list
             if (images.length !== imageIds.length)
                 this.showNotAuthorizedItems(images, imageIds, "UUID", "images");
             return images;
@@ -237,8 +237,8 @@ class Controller {
     checkInsertImagesFromFile(file, request) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (file.images === undefined)
-                    return new Error("an image or .zip must be given");
+                if (file === null || file.images === undefined)
+                    return new Error("an image or .zip must be provided");
                 yield this.checkUserDataset(request.datasetId);
                 file = file.images;
                 const IS_VALID_FILE = Images_1.Image.isValidMimetype(file.mimetype);

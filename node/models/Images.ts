@@ -14,25 +14,22 @@ export class Image extends Model {
 
   // check if a mimetype is supported
   static isValidMimetype(mimetype: string): boolean {
-    return [
-      "application/zip",
-      "image/jpeg",
-      "image/jpg",
-      "image/gif",
-      "image/png",
-    ].some((element) => {
-      if (mimetype === element) return true;
+    return ["application/zip", "image/jpeg", "image/jpg", "image/png"].some(
+      (element) => {
+        if (mimetype === element) return true;
 
-      return false;
-    });
+        return false;
+      }
+    );
+  }
+
+  // returns the file extension from the filename
+  static fileExtension(name: string) {
+    return name.split(".").pop().toLowerCase();
   }
 }
 
 let sequelize = DatabaseSingleton.getInstance();
-
-// will make the first letter of a string upper case, the remaining lower case
-const capitalize = (string: string): string =>
-  string[0].toUpperCase() + string.slice(1).toLowerCase();
 
 // relationship with database
 Image.init(
@@ -44,6 +41,19 @@ Image.init(
     },
     fileName: {
       type: DataTypes.STRING(100),
+      set(value: string) {
+
+        // truncates the fileName so it will be equal to 100 character
+        const truncateFileName = (string: string): string => {
+          if (value.length >= 100) {
+            let extension = Image.fileExtension(value);
+            return value.slice(0, 99 - extension.length) + "." + extension;
+          }
+          return value;
+        };
+
+        this.setDataValue("fileName", truncateFileName(value));
+      },
       validate: {
         notEmpty: { msg: "image fileName must be not empty" },
         len: {
@@ -56,6 +66,11 @@ Image.init(
       type: DataTypes.STRING(50),
       allowNull: true,
       set(value: string) {
+
+        // makes the first letter of a string upper case, the remaining lower case
+        const capitalize = (string: string): string =>
+          string[0].toUpperCase() + string.slice(1).toLowerCase();
+
         // Real or Fake
         this.setDataValue("label", capitalize(value));
       },

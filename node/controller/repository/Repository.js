@@ -88,13 +88,9 @@ class Repository {
             return { dataset: dataset, tags: createdTags };
         });
     }
-    // returns the file extension from the filename
-    fileExtension(fileName) {
-        return fileName.split(".").pop().toLowerCase();
-    }
     // checks if an image is supported
     isImage(fileName) {
-        let mimetype = "image/" + this.fileExtension(fileName);
+        let mimetype = "image/" + Images_1.Image.fileExtension(fileName);
         if (Images_1.Image.isValidMimetype(mimetype))
             return true;
         return false;
@@ -244,7 +240,7 @@ class Repository {
         if (createPath && !fs.existsSync(finalPath)) {
             fs.mkdirSync(finalPath, { recursive: true });
         }
-        return path.join(finalPath, image.UUID + "." + this.fileExtension(image.fileName));
+        return path.join(finalPath, image.UUID + "." + Images_1.Image.fileExtension(image.fileName));
     }
     // saves the image on database
     // returns the created image

@@ -37,6 +37,10 @@ Dataset.init(
       field: "datasetName",
       validate: {
         notEmpty: { msg: "dataset name must be not empty" },
+        len: {
+          args: [0, 50],
+          msg: "dataset name must be less than 50 characters",
+        },
       },
     },
     numClasses: {
@@ -48,8 +52,8 @@ Dataset.init(
           args: [1],
           msg: "number of classes must be >= 1",
         },
-        isNumeric: {
-          msg: "number of classes must be a number",
+        isInt: {
+          msg: "number of classes must be an integer",
         },
       },
     },
@@ -77,6 +81,9 @@ Dataset.init(
     timestamps: false,
     scopes: {
       visible: {
+        attributes: {
+          exclude: ["isDeleted"],
+        },
         where: {
           isDeleted: false,
         },

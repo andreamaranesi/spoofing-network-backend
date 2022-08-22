@@ -26,7 +26,6 @@ app.get("/get/token", async function (req, res) {
 
 app.use(express.json());
 
-
 // validate json data
 const checkValidation = function (res, errors) {
   if (!errors.isEmpty()) return errors;
@@ -39,13 +38,12 @@ const sendValidationError = function (res, errors) {
   res.status(500).send({ error: errors.array() });
 };
 
-
 const validateListImages = [
   body("images")
     .isArray()
     .notEmpty()
     .withMessage("images must be a list of id"),
-  body("images.*").isNumeric().withMessage("image id must be numeric"),
+  body("images.*").isInt().withMessage("image id must be an integer"),
 ];
 
 const validateTags = [
@@ -54,14 +52,22 @@ const validateTags = [
     .isArray()
     .notEmpty()
     .withMessage("tags must be a list of string"),
-  body("tags.*").optional().isString().withMessage("tag must be a string"),
+  body("tags.*")
+    .optional()
+    .isString()
+    .withMessage("tag must be a string")
+    .isLength({ max: 50 })
+    .withMessage("tag name must be <= 50 characters"),
 ];
 
 // route to create a new dataset
 app.get(
   "/create/dataset",
-  body("name").exists(),
-  body("numClasses").exists(),
+  body("name")
+    .exists()
+    .isLength({ max: 50 })
+    .withMessage("dataset name must be <= 50 characters"),
+  body("numClasses").exists().isInt(),
   validateTags,
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
@@ -81,11 +87,11 @@ app.get(
 // route to update a dataset
 app.get(
   "/update/dataset",
-  body("datasetId").isNumeric(),
+  body("datasetId").isInt(),
   validateTags,
   oneOf([
     body("name").exists(),
-    body("numClasses").exists(),
+    body("numClasses").exists().isInt(),
     body("tags").exists(),
   ]),
   async function (req, res) {
@@ -104,7 +110,7 @@ app.get(
 // route to logically delete a dataset
 app.get(
   "/delete/dataset",
-  body("datasetId").isNumeric(),
+  body("datasetId").isInt(),
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
@@ -161,7 +167,7 @@ app.get(
   "/set/token",
   isAdmin,
   body("email").isEmail(),
-  body("token").isNumeric(),
+  body("token").isFloat({max:100000}).withMessage("token amount must be less than 100000"),
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
@@ -215,7 +221,8 @@ app.get(
 app.get(
   "/images/url",
   body("url").isURL(),
-  body("datasetId").isNumeric(),
+  body("datasetId").isInt(),
+  body("singleImageName").optional().isString().exists(),
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
@@ -235,7 +242,7 @@ app.use(fileUpload());
 // file must be a supported image or a .zip of supported images
 app.post(
   "/images/file",
-  body("datasetId").isNumeric(),
+  body("datasetId").isInt(),
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);

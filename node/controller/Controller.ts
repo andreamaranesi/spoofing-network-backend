@@ -150,7 +150,7 @@ export class Controller {
       }
     }
 
-    // if images found are less than given list
+    // if images found are less than provided list
     if (images.length !== imageIds.length)
       this.showNotAuthorizedItems(images, imageIds, "UUID", "images");
 
@@ -252,8 +252,8 @@ export class Controller {
     request: any
   ): Promise<Object | Error> {
     try {
-      if (file.images === undefined)
-        return new Error("an image or .zip must be given");
+      if (file === null || file.images === undefined)
+        return new Error("an image or .zip must be provided");
 
       await this.checkUserDataset(request.datasetId);
 

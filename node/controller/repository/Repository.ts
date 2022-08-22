@@ -96,14 +96,9 @@ export class Repository {
     return { dataset: dataset, tags: createdTags };
   }
 
-  // returns the file extension from the filename
-  private fileExtension(fileName: string) {
-    return fileName.split(".").pop().toLowerCase();
-  }
-
   // checks if an image is supported
   private isImage(fileName: string): boolean {
-    let mimetype = "image/" + this.fileExtension(fileName);
+    let mimetype = "image/" + Image.fileExtension(fileName);
     if (Image.isValidMimetype(mimetype)) return true;
 
     return false;
@@ -302,7 +297,7 @@ export class Repository {
 
     return path.join(
       finalPath,
-      image.UUID + "." + this.fileExtension(image.fileName)
+      image.UUID + "." + Image.fileExtension(image.fileName)
     );
   }
 

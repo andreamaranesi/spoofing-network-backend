@@ -36,6 +36,10 @@ User.init({
                 args: [0],
                 msg: "token must be >= 0",
             },
+            max: {
+                args: [100000],
+                msg: "token must be <= 100000"
+            },
             isNumeric: {
                 msg: "token must be numeric",
             },
