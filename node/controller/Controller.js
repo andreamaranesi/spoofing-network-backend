@@ -13,8 +13,8 @@ exports.Controller = void 0;
 const Dataset_1 = require("../models/Dataset");
 const User_1 = require("../models/User");
 const Repository_1 = require("./repository/Repository");
-const sequelize_1 = require("sequelize");
 const Images_1 = require("../models/Images");
+const sequelize_1 = require("sequelize");
 /**
  * manages and checks user routes
  */
@@ -56,10 +56,34 @@ class Controller {
             return results;
         });
     }
+    // checks if exists another dataset with the same name
+    checkDatasetWithSameName(name, datasetId = null) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (name !== undefined) {
+                // final Sequelize filtering options
+                const FILTER_OPTIONS = {
+                    where: {
+                        name: name,
+                        userId: this.user.id,
+                    },
+                };
+                // checks that the dataset is not itself
+                if (datasetId !== null) {
+                    FILTER_OPTIONS["where"]["id"] = {
+                        [sequelize_1.Op.ne]: datasetId,
+                    };
+                }
+                let dataset = yield Dataset_1.Dataset.scope("visible").findOne(FILTER_OPTIONS);
+                if (dataset !== null)
+                    throw new Error(`there is already a dataset with name ${name}`);
+            }
+        });
+    }
     // returns a new dataset instance
     checkCreateDataset(datasetJson) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                yield this.checkDatasetWithSameName(datasetJson.name);
                 return yield this.repository.createDataset(datasetJson);
             }
             catch (error) {
@@ -73,6 +97,7 @@ class Controller {
     checkUpdateDataset(datasetJson) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                yield this.checkDatasetWithSameName(datasetJson.name, datasetJson.datasetId);
                 let dataset = yield this.checkUserDataset(datasetJson.datasetId);
                 delete datasetJson.datasetId;
                 return yield this.repository.updateDataset(datasetJson, dataset[0]);
@@ -139,7 +164,7 @@ class Controller {
                 if (this.checkDuplicateEntries(request.images))
                     return new Error("there are duplicated entries on images");
                 let images = yield this.checkUserImages(request.images);
-                // if user gives one image 
+                // if user gives one image
                 // checks if the image has already an inference
                 if (images.length === 1) {
                     if (images[0].inference !== null) {

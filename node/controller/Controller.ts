@@ -1,14 +1,13 @@
 import { Dataset } from "../models/Dataset";
 import { User } from "../models/User";
 import { Repository } from "./repository/Repository";
-import { Op } from "sequelize";
 import { Image } from "../models/Images";
+import { FindOptions, Includeable, Op } from "sequelize";
 
 /**
  * manages and checks user routes
  */
 export class Controller {
-
   // controller interacts with the repository for CRUD operations
   private repository: Repository;
   private user: User;
@@ -20,9 +19,8 @@ export class Controller {
   }
 
   // checks if a list contains duplicated entries
-  private checkDuplicateEntries(list:Array<any>): boolean{
-    if ([...new Set(list)].length !== list.length)
-      return true;
+  private checkDuplicateEntries(list: Array<any>): boolean {
+    if ([...new Set(list)].length !== list.length) return true;
     return false;
   }
 
@@ -34,7 +32,6 @@ export class Controller {
     key: string,
     modelName: string
   ): void {
-
     let ids: Array<any> = [];
     for (let result of list) {
       ids.push(result[key]);
@@ -44,7 +41,6 @@ export class Controller {
 
     throw new Error(difference.join(",") + ` id(s) are not accessible`);
   }
-
 
   // checks if dataset id is owned by the authenticated user
   // returns the datasets found
@@ -63,9 +59,37 @@ export class Controller {
     return results;
   }
 
+  // checks if exists another dataset with the same name
+  private async checkDatasetWithSameName(
+    name: string,
+    datasetId: number = null
+  ): Promise<void> {
+    if (name !== undefined) {
+      // final Sequelize filtering options
+      const FILTER_OPTIONS: FindOptions = {
+        where: {
+          name: name,
+          userId: this.user.id,
+        },
+      };
+
+      // checks that the dataset is not itself
+      if (datasetId !== null) {
+        FILTER_OPTIONS["where"]["id"] = {
+          [Op.ne]: datasetId,
+        };
+      }
+
+      let dataset = await Dataset.scope("visible").findOne(FILTER_OPTIONS);
+
+      if (dataset !== null)
+        throw new Error(`there is already a dataset with name ${name}`);
+    }
+  }
   // returns a new dataset instance
   async checkCreateDataset(datasetJson: any): Promise<Object | Error> {
     try {
+      await this.checkDatasetWithSameName(datasetJson.name);
       return await this.repository.createDataset(datasetJson);
     } catch (error) {
       return new Error(error.message);
@@ -77,6 +101,8 @@ export class Controller {
   // returns the updated dataset
   async checkUpdateDataset(datasetJson: any): Promise<Object | Error> {
     try {
+      await this.checkDatasetWithSameName(datasetJson.name, datasetJson.datasetId);
+
       let dataset = await this.checkUserDataset(datasetJson.datasetId);
 
       delete datasetJson.datasetId;
@@ -141,14 +167,12 @@ export class Controller {
   // returns the results of the inference done by the CNN model
   async checkDoInference(request: any): Promise<Object | Error> {
     try {
-
       if (this.checkDuplicateEntries(request.images))
         return new Error("there are duplicated entries on images");
-      
 
       let images = await this.checkUserImages(request.images);
 
-      // if user gives one image 
+      // if user gives one image
       // checks if the image has already an inference
       if (images.length === 1) {
         if (images[0].inference !== null) {
@@ -171,7 +195,6 @@ export class Controller {
   // sets labels (real, fake) to the list of images
   async checkSetLabel(request: any): Promise<Array<Object> | Error> {
     try {
-
       if (this.checkDuplicateEntries(request.images))
         return new Error("there are duplicated entries on images");
 

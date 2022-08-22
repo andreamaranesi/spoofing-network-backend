@@ -7,7 +7,7 @@ import { User } from "./User";
  */
 export class Dataset extends Model {
   declare id: number; // this is ok! The 'declare' keyword ensures this field will not be emitted by TypeScript.
-  declare datasetName: string;
+  declare name: string;
   declare classes: number;
   declare creationDate: Date;
   declare userId: number;

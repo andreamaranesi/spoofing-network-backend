@@ -379,7 +379,7 @@ export class Repository {
     }
 
     // final Sequelize filtering options
-    const FILTER_OPTION: FindOptions = {
+    const FILTER_OPTIONS: FindOptions = {
       where: {
         userId: this.user.id
       },
@@ -387,12 +387,12 @@ export class Repository {
     };
 
     if (dateFilter !== null) {
-      FILTER_OPTION.where["creationDate"] = {
+      FILTER_OPTIONS.where["creationDate"] = {
         [dateFilter[0]]: dateFilter[1],
       };
     }
 
-    let datasets = await Dataset.scope("visible").findAll(FILTER_OPTION);
+    let datasets = await Dataset.scope("visible").findAll(FILTER_OPTIONS);
 
     // if tagRelationship = and
     // filter datasets that have not the list of the given distinct tags
