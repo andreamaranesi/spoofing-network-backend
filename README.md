@@ -470,6 +470,13 @@ filename will be truncated if > 100 characters
 | --------- | -------- | ----------- |
 | images    | true     | Array\<int> |
 
+
+
+**NOTES**
+
+- if user requests a single image, checks if the inference has been already made
+- if user provides two or more images, **will not** check if the inference has already been made on all of them. This was done because metrics as confusion matrix are returned at runtime, so we don't save them
+
 **RESPONSE SCHEMA**
 
 ```

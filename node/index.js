@@ -63,6 +63,7 @@ const validateTags = [
 // route to create a new dataset
 app.get("/create/dataset", (0, express_validator_1.body)("name")
     .exists()
+    .isString()
     .isLength({ max: 50 })
     .withMessage("dataset name must be <= 50 characters"), (0, express_validator_1.body)("numClasses").exists().isInt(), validateTags, function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -81,7 +82,12 @@ app.get("/create/dataset", (0, express_validator_1.body)("name")
     });
 });
 // route to update a dataset
-app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), validateTags, (0, express_validator_1.oneOf)([
+app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), (0, express_validator_1.body)("name")
+    .optional()
+    .exists()
+    .isString()
+    .isLength({ max: 50 })
+    .withMessage("dataset name must be <= 50 characters"), validateTags, (0, express_validator_1.oneOf)([
     (0, express_validator_1.body)("name").exists(),
     (0, express_validator_1.body)("numClasses").exists().isInt(),
     (0, express_validator_1.body)("tags").exists(),
@@ -149,7 +155,9 @@ app.get("/get/dataset", (0, express_validator_1.body)("startDate")
 });
 // admin route
 // update a user token amount
-app.get("/set/token", middleware_1.isAdmin, (0, express_validator_1.body)("email").isEmail(), (0, express_validator_1.body)("token").isFloat({ max: 100000 }).withMessage("token amount must be less than 100000"), function (req, res) {
+app.get("/set/token", middleware_1.isAdmin, (0, express_validator_1.body)("email").isEmail(), (0, express_validator_1.body)("token")
+    .isFloat({ max: 100000 })
+    .withMessage("token amount must be less than 100000"), function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)
