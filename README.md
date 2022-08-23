@@ -543,9 +543,9 @@ filename will be truncated if > 100 characters
 
 #### UPDATE USER TOKEN
 
-| METHOD | URL            | DATA TYPE | RESPONSE TYPE |
-| ------ | -------------- | --------- | ------------- |
-| GET    | /get/inference | Json      | Json          |
+| METHOD | URL        | DATA TYPE | RESPONSE TYPE |
+| ------ | ---------- | --------- | ------------- |
+| GET    | /set/token | Json      | Json          |
 
 | PARAMETER | REQUIRED | TYPE  | CONSTRAINT |
 | --------- | -------- | ----- | ---------- |
