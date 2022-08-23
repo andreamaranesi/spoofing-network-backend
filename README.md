@@ -621,6 +621,12 @@ filename will be truncated if > 100 characters
             "msg": "dataset name must be <= 50 characters",
             "param": "name",
             "location": "body"
+        },
+        {
+            "value": -1,
+            "msg": "numClasses must be between 1 and 50",
+            "param": "numClasses",
+            "location": "body"
         }
     ]
 }
@@ -645,6 +651,12 @@ filename will be truncated if > 100 characters
 ```json
 {
     "error": [
+        {
+            "value": -1,
+            "msg": "numClasses must be between 1 and 50",
+            "param": "numClasses",
+            "location": "body"
+        },
         {
             "value": [],
             "msg": "tags must be a list of string",
@@ -761,7 +773,7 @@ filename will be truncated if > 100 characters
 
 ```json
 {
-   "numClasses":1,
+   "numClasses": 1,
    "tags":["tag1","tag2"],
    "datasetId": 1
 }
