@@ -146,7 +146,7 @@ class Repository {
                         let image = yield this.createImage(fileName, datasetId);
                         let outputPath = this.getImagePath(image, true);
                         fs.writeFileSync(outputPath, buffer[0]);
-                        images[fileName] = image.UUID;
+                        images[fileName] = image.id;
                     }
                     resolve(images);
                 }))
@@ -190,7 +190,7 @@ class Repository {
                         let fileName = `${singleImageName}.${extension}`;
                         let image = yield this.createImage(fileName, datasetId);
                         yield file.pipe(fs.createWriteStream(this.getImagePath(image, true)));
-                        imageJson[fileName] = image.UUID;
+                        imageJson[fileName] = image.id;
                         return imageJson;
                     }
                     // if the file is a .zip
@@ -218,7 +218,7 @@ class Repository {
                     yield this.updateUserTokenByCost(this.user, cost);
                     let image = yield this.createImage(file.name, datasetId);
                     file.mv(this.getImagePath(image, true));
-                    images[file.name] = image.UUID;
+                    images[file.name] = image.id;
                 }
                 // if the file is an .zip, will extract valid images
                 else if (file.mimetype.includes("zip")) {
@@ -240,7 +240,7 @@ class Repository {
         if (createPath && !fs.existsSync(finalPath)) {
             fs.mkdirSync(finalPath, { recursive: true });
         }
-        return path.join(finalPath, image.UUID + "." + Images_1.Image.fileExtension(image.fileName));
+        return path.join(finalPath, image.id + "." + Images_1.Image.fileExtension(image.fileName));
     }
     // saves the image on database
     // returns the created image
@@ -338,7 +338,7 @@ class Repository {
                 const BODY = { images: [] };
                 for (let image of images) {
                     BODY.images.push({
-                        UUID: image.UUID,
+                        id: image.id,
                         label: (_a = image.label) !== null && _a !== void 0 ? _a : "",
                         path: this.getImagePath(image, false, true),
                     });
@@ -360,12 +360,12 @@ class Repository {
                     this.user = yield User_1.User.findByPk(this.user.id);
                     // update user token amount
                     yield this.updateUserToken(this.user, this.user.token + cost * invalidImages.length);
-                    res.data["updatedTokens"] = this.user.token;
+                    res.data["updatedToken"] = this.user.token;
                 }
                 let inferences = data.imagePredictions;
                 // saves inferences on database
                 for (let inference of inferences) {
-                    let image = yield Images_1.Image.findByPk(inference.UUID);
+                    let image = yield Images_1.Image.findByPk(inference.id);
                     let prediction = inference.prediction;
                     if (image !== null)
                         yield image.set({ inference: prediction }).save();

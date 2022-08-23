@@ -163,7 +163,7 @@ export class Repository {
 
             fs.writeFileSync(outputPath, buffer[0]);
 
-            images[fileName] = image.UUID;
+            images[fileName] = image.id;
           }
           resolve(images);
         })
@@ -223,7 +223,7 @@ export class Repository {
             await file.pipe(
               fs.createWriteStream(this.getImagePath(image, true))
             );
-            imageJson[fileName] = image.UUID;
+            imageJson[fileName] = image.id;
             return imageJson;
           } 
           // if the file is a .zip
@@ -257,7 +257,7 @@ export class Repository {
 
         file.mv(this.getImagePath(image, true));
 
-        images[file.name] = image.UUID;
+        images[file.name] = image.id;
       }
       // if the file is an .zip, will extract valid images
       else if (file.mimetype.includes("zip")) {
@@ -297,7 +297,7 @@ export class Repository {
 
     return path.join(
       finalPath,
-      image.UUID + "." + Image.fileExtension(image.fileName)
+      image.id + "." + Image.fileExtension(image.fileName)
     );
   }
 
@@ -411,7 +411,7 @@ export class Repository {
       const BODY = { images: [] };
       for (let image of images) {
         BODY.images.push({
-          UUID: image.UUID,
+          id: image.id,
           label: image.label ?? "",
           path: this.getImagePath(image, false, true),
         });
@@ -446,14 +446,14 @@ export class Repository {
             this.user.token + cost * invalidImages.length
           );
 
-          res.data["updatedTokens"] = this.user.token;
+          res.data["updatedToken"] = this.user.token;
         }
 
         let inferences = data.imagePredictions;
 
         // saves inferences on database
         for (let inference of inferences) {
-          let image = await Image.findByPk(inference.UUID);
+          let image = await Image.findByPk(inference.id);
           let prediction = inference.prediction;
           if (image !== null) await image.set({ inference: prediction }).save();
         }

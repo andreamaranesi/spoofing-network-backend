@@ -2,14 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const sequelize_1 = require("sequelize");
-const DatabaseSingleton_1 = require("../controller/repository/DatabaseSingleton");
+const DatabaseSingleton_1 = require("../db/DatabaseSingleton");
 /*
  User Model
 */
 class User extends sequelize_1.Model {
 }
 exports.User = User;
-let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance().sequelize;
 // relationship with database
 User.init({
     id: {

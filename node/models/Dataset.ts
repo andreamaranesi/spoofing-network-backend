@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
+import { DatabaseSingleton } from "../db/DatabaseSingleton";
 import { User } from "./User";
 
 /**
@@ -16,7 +16,7 @@ export class Dataset extends Model {
   declare isDeleted: boolean;
 }
 
-let sequelize = DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton.getInstance().sequelize;
 
 // relationship with database
 Dataset.init(

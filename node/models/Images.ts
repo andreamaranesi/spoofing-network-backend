@@ -1,12 +1,12 @@
 import { DataTypes, Model } from "sequelize";
-import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
+import { DatabaseSingleton } from "../db/DatabaseSingleton";
 import { Dataset } from "./Dataset";
 
 /*
  Image Model
 */
 export class Image extends Model {
-  declare UUID: number;
+  declare id: number;
   declare label: string;
   declare inference: string;
   declare datasetId: number;
@@ -29,12 +29,12 @@ export class Image extends Model {
   }
 }
 
-let sequelize = DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton.getInstance().sequelize;
 
 // relationship with database
 Image.init(
   {
-    UUID: {
+    id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,

@@ -131,7 +131,7 @@ export class Controller {
         model: Image,
         required: true,
         where: {
-          UUID: {
+          id: {
             [Op.in]: imageIds,
           },
         },
@@ -151,7 +151,7 @@ export class Controller {
 
     // if images found are less than provided list
     if (images.length !== imageIds.length)
-      this.showNotAuthorizedItems(images, imageIds, "UUID");
+      this.showNotAuthorizedItems(images, imageIds, "id");
 
     return images;
   }
@@ -161,7 +161,7 @@ export class Controller {
     return { token: this.user.token };
   }
 
-  // request must contains a list of uuids of images
+  // request must contains a list of ids of images
   // checks if images are owned by the authenticated user
   // returns the results of the inference done by the CNN model
   async checkDoInference(request: any): Promise<Object | Error> {
@@ -176,7 +176,7 @@ export class Controller {
       if (images.length === 1) {
         if (images[0].inference !== null) {
           return new Error(
-            `image id ${images[0].UUID} has already an inference: ${images[0].inference}`
+            `image id ${images[0].id} has already an inference: ${images[0].inference}`
           );
         }
       }
@@ -190,7 +190,7 @@ export class Controller {
     }
   }
 
-  // request must contains a list of uuids of images and associated labels
+  // request must contains a list of ids of images and associated labels
   // checks if images are owned by the authenticated user
   // sets labels (real, fake) to the list of images
   async checkSetLabel(request: any): Promise<Array<Object> | Error> {
@@ -264,14 +264,14 @@ export class Controller {
       let cost = parseFloat(process.env.INSERT_IMAGE_COST);
 
       if (IS_VALID_FILE) {
-        let uuids = await this.repository.saveImage(
+        let ids = await this.repository.saveImage(
           file,
           request.datasetId,
           cost
         );
-        if (Object.keys(uuids).length === 0)
+        if (Object.keys(ids).length === 0)
           return new Error("no images was valid");
-        return uuids;
+        return ids;
       }
 
       return new Error("file must be an image or a .zip of images");

@@ -4,6 +4,8 @@
 - <a href="#uml-diagrams">UML DIAGRAMS</a>
 - <a href="#design-patterns">DESIGN PATTERNS</a>
 - <a href="#routes">ROUTES</a>
+  - <a href="#user-routes">DEFAULT USER ROUTES</a>
+  - <a href="admin-routes">ADMIN ROUTES</a>
 - <a href="#postman-tests">POSTMAN TESTS</a>
 
 ## <a id="project-aim">PROJECT AIM</a>
@@ -101,14 +103,16 @@ User.init(
 The connection with the database is managed by a **Singleton** class, `DatabaseSingleton`:
 
 ```typescript
-let sequelize = DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton.getInstance().instance;
 ```
 
 `DatabaseSingleton.getInstance()` creates a **connection pool**:
 
 ```typescript
-const sequelize = new Sequelize(db_name, db_username, db_password, {
-      host: db_host,
+    const NEW_INSTANCE = new DatabaseSingleton();
+    
+    NEW_INSTANCE.sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
+      host: DB_HOST,
       dialect: "mysql",
       pool: {
         max: 5,
@@ -184,7 +188,7 @@ web-node:
 
 
 
-### DEFAULT USER ROUTES
+### <a id="user-routes">DEFAULT USER ROUTES</a>
 
 #### CREATE A DATASET
 
@@ -278,7 +282,7 @@ web-node:
 
 | PARAMETER | REQUIRED | TYPE | CONSTRAINTS |
 | --------- | -------- | ---- | ----------- |
-| datasetId | true     | int  | None        |
+| datasetId | true     | int  | -           |
 
 **RESPONSE SCHEMA**:
 
@@ -303,12 +307,12 @@ web-node:
 | ------ | ------------ | --------- | ------------- |
 | GET    | /get/dataset | Json      | Json          |
 
-| PARAMETER       | REQUIRED | TYPE           | DEFAULT VALUE | CONSTRAINTS       |
-| --------------- | -------- | -------------- | ------------- | ----------------- |
-| startDate       | false    | date           | -             | format DD-MM-YYYY |
-| endDate         | false    | date           | -             | format DD-MM-YYYY |
-| tags            | false    | Array\<string> | -             | <= 50 characters  |
-| tagRelationship | false    | string         | or            | [or, and]         |
+| PARAMETER       | REQUIRED | TYPE           | DEFAULT VALUE | CONSTRAINTS                 |
+| --------------- | -------- | -------------- | ------------- | --------------------------- |
+| startDate       | false    | date           | -             | format DD-MM-YYYY           |
+| endDate         | false    | date           | -             | format DD-MM-YYYY           |
+| tags            | false    | Array\<string> | -             | <= 50 characters            |
+| tagRelationship | false    | string         | or            | [or, and], case insensitive |
 
 **CONSTRAINTS**
 
@@ -333,7 +337,7 @@ web-node:
         "userId": int,
         "Images": [
             {
-                "UUID": int,
+                "id": int,
                 "fileName": string,
                 "label": string?,
                 "inference": string?,
@@ -435,21 +439,25 @@ filename will be truncated if > 100 characters
 | ------ | ---------- | --------- | ------------- |
 | GET    | /set/label | Json      | Json          |
 
-| PARAMETER | REQUIRED | TYPE            |
-| --------- | -------- | --------------- |
-| images    | true     | Array\<int>     |
-| labels    | true     | ["real","fake"] |
+| PARAMETER | REQUIRED | TYPE        | CONSTRAINTS                       |
+| --------- | -------- | ----------- | --------------------------------- |
+| images    | true     | Array\<int> | -                                 |
+| labels    | true     | string      | ["fake","real"], case insensitive |
 
 **CONSTRAINTS**
 
 - `images` length = `labels` length
+
+**NOTES**
+
+- for the image at index `i` of the list, will be linked the label at index `i`
 
 **RESPONSE SCHEMA**
 
 ```
 [
     {
-        "UUID": int,
+        "id": int,
         "fileName": string,
         "label": string,
         "inference": string?,
@@ -483,7 +491,7 @@ filename will be truncated if > 100 characters
 {
     "imagePredictions": [
         {
-            "UUID": int,
+            "id": int,
             "label": string,
             "prediction": string
         }
@@ -491,7 +499,7 @@ filename will be truncated if > 100 characters
     "invalidPredictions": [string],
     "metrics": {
         "cm": [ [int, int], [int, int] ],
-        "validUUID": [int],
+        "validId": [int],
         "values": {
             "Fake": {
                 "f1": float,
@@ -513,7 +521,7 @@ filename will be truncated if > 100 characters
 
 `invalidPredictions` = list of images that are unreadable from Python, or that have not a detectable face
 
- `updatedTokens`= new token after the charge back for invalid predictions
+ `updatedToken`= new token after the charge back for invalid predictions
 
 #### GET CURRENT TOKEN
 
@@ -531,7 +539,7 @@ filename will be truncated if > 100 characters
 
 
 
-### ADMIN ROUTES
+### <a id="admin-routes">ADMIN ROUTES</a>
 
 #### UPDATE USER TOKEN
 
@@ -981,7 +989,7 @@ filename will be truncated if > 100 characters
         "userId": 1,
         "Images": [
             {
-                "UUID": 4,
+                "id": 4,
                 "fileName": "test2.jpg",
                 "label": null,
                 "inference": null,
@@ -1224,21 +1232,21 @@ filename will be truncated if > 100 characters
 ```json
 [
     {
-        "UUID": 6,
+        "id": 6,
         "fileName": "example.jpeg",
         "label": "Real",
         "inference": null,
         "datasetId": 3
     },
     {
-        "UUID": 7,
+        "id": 7,
         "fileName": "downloaded_file.jpeg",
         "label": "Fake",
         "inference": null,
         "datasetId": 3
     },
     {
-        "UUID": 8,
+        "id": 8,
         "fileName": ".jpeg",
         "label": "Real",
         "inference": null,
@@ -1290,7 +1298,7 @@ filename will be truncated if > 100 characters
         11
     ],
     "metrics": null,
-    "updatedTokens": 473.85
+    "updatedToken": 473.85
 }
 ```
 
@@ -1312,7 +1320,7 @@ filename will be truncated if > 100 characters
 {
     "imagePredictions": [
         {
-            "UUID": 4,
+            "id": 4,
             "label": "Real",
             "prediction": "Real"
         }
@@ -1329,7 +1337,7 @@ filename will be truncated if > 100 characters
                 0
             ]
         ],
-        "validUUID": [
+        "validId": [
             4
         ],
         "values": {
@@ -1366,22 +1374,22 @@ filename will be truncated if > 100 characters
 {
     "imagePredictions": [
         {
-            "UUID": 5,
+            "id": 5,
             "label": "Real",
             "prediction": "Real"
         },
         {
-            "UUID": 6,
+            "id": 6,
             "label": "Real",
             "prediction": "Real"
         },
         {
-            "UUID": 7,
+            "id": 7,
             "label": "Fake",
             "prediction": "Real"
         },
         {
-            "UUID": 8,
+            "id": 8,
             "label": "Real",
             "prediction": "Real"
         }
@@ -1398,7 +1406,7 @@ filename will be truncated if > 100 characters
                 0
             ]
         ],
-        "validUUID": [
+        "validId": [
             5,
             6,
             7,
@@ -1438,7 +1446,7 @@ filename will be truncated if > 100 characters
 
 ### UPDATE USER TOKEN 
 
-**ADMIN TOKEN**: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFuZHJlYUBlbWFpbC5jb20ifQ._CJkiQpkQBSt2CupXLSZ29nj6InEqgs0bjgHwFhWtWg 
+**ADMIN TOKEN**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFuZHJlYUBlbWFpbC5jb20ifQ._CJkiQpkQBSt2CupXLSZ29nj6InEqgs0bjgHwFhWtWg` 
 
 #### TEST 1
 

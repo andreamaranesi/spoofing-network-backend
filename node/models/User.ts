@@ -1,5 +1,5 @@
 import { Model, DataTypes } from "sequelize";
-import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
+import { DatabaseSingleton } from "../db/DatabaseSingleton";
 
 /*
  User Model
@@ -12,7 +12,7 @@ export class User extends Model {
   declare isAdmin: boolean;
 }
 
-let sequelize = DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton.getInstance().sequelize;
 
 // relationship with database
 User.init(

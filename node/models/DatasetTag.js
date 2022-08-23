@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatasetTag = void 0;
 const sequelize_1 = require("sequelize");
-const DatabaseSingleton_1 = require("../controller/repository/DatabaseSingleton");
+const DatabaseSingleton_1 = require("../db/DatabaseSingleton");
 const Dataset_1 = require("./Dataset");
 /*
   Tag Model
@@ -10,7 +10,7 @@ const Dataset_1 = require("./Dataset");
 class DatasetTag extends sequelize_1.Model {
 }
 exports.DatasetTag = DatasetTag;
-let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance().sequelize;
 // relationship with database
 DatasetTag.init({
     datasetId: {
