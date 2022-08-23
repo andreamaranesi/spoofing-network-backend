@@ -5,7 +5,7 @@
 - <a href="#design-patterns">DESIGN PATTERNS</a>
 - <a href="#routes">ROUTES</a>
   - <a href="#user-routes">DEFAULT USER ROUTES</a>
-  - <a href="admin-routes">ADMIN ROUTES</a>
+  - <a href="#admin-routes">ADMIN ROUTES</a>
 - <a href="#postman-tests">POSTMAN TESTS</a>
 
 ## <a id="project-aim">PROJECT AIM</a>
