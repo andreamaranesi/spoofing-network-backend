@@ -65,7 +65,9 @@ app.get("/create/dataset", (0, express_validator_1.body)("name")
     .exists()
     .isString()
     .isLength({ max: 50 })
-    .withMessage("dataset name must be <= 50 characters"), (0, express_validator_1.body)("numClasses").exists().isInt(), validateTags, function (req, res) {
+    .withMessage("dataset name must be <= 50 characters"), (0, express_validator_1.body)("numClasses")
+    .isInt({ min: 1, max: 50 })
+    .withMessage("numClasses must be between 1 and 50"), validateTags, function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let error = checkValidation(res, (0, express_validator_1.validationResult)(req));
         if (error !== null)
@@ -87,7 +89,10 @@ app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), (
     .exists()
     .isString()
     .isLength({ max: 50 })
-    .withMessage("dataset name must be <= 50 characters"), validateTags, (0, express_validator_1.oneOf)([
+    .withMessage("dataset name must be <= 50 characters"), (0, express_validator_1.body)("numClasses")
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage("numClasses must be between 1 and 50"), validateTags, (0, express_validator_1.oneOf)([
     (0, express_validator_1.body)("name").exists(),
     (0, express_validator_1.body)("numClasses").exists().isInt(),
     (0, express_validator_1.body)("tags").exists(),

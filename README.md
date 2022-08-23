@@ -109,9 +109,9 @@ let sequelize = DatabaseSingleton.getInstance().instance;
 `DatabaseSingleton.getInstance()` creates a **connection pool**:
 
 ```typescript
-    const NEW_INSTANCE = new DatabaseSingleton();
+const NEW_INSTANCE = new DatabaseSingleton().sequelize;
     
-    NEW_INSTANCE.sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
+NEW_INSTANCE.sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
       host: DB_HOST,
       dialect: "mysql",
       pool: {
@@ -199,7 +199,7 @@ web-node:
 | PARAMETER  | REQUIRED | TYPE           | CONSTRAINTS       |
 | ---------- | -------- | -------------- | ----------------- |
 | name       | true     | string         | <= 100 characters |
-| numClasses | true     | int            | >= 1              |
+| numClasses | true     | int            | >= 1, <= 50       |
 | tags       | false    | Array\<string> | <= 50 characters  |
 
 
@@ -241,7 +241,7 @@ web-node:
 | PARAMETER  | REQUIRED | TYPE           | CONSTRAINTS       |
 | ---------- | -------- | -------------- | ----------------- |
 | name       | false    | string         | <= 100 characters |
-| numClasses | false    | int            | >= 1              |
+| numClasses | false    | int            | >= 1, <= 50       |
 | tags       | false    | Array\<string> | <= 50 characters  |
 
 **CONSTRAINTS**

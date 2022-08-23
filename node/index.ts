@@ -68,7 +68,9 @@ app.get(
     .isString()
     .isLength({ max: 50 })
     .withMessage("dataset name must be <= 50 characters"),
-  body("numClasses").exists().isInt(),
+  body("numClasses")
+    .isInt({ min: 1, max: 50 })
+    .withMessage("numClasses must be between 1 and 50"),
   validateTags,
   async function (req, res) {
     let error = checkValidation(res, validationResult(req));
@@ -95,6 +97,10 @@ app.get(
     .isString()
     .isLength({ max: 50 })
     .withMessage("dataset name must be <= 50 characters"),
+  body("numClasses")
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage("numClasses must be between 1 and 50"),
   validateTags,
   oneOf([
     body("name").exists(),

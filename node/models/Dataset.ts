@@ -52,6 +52,10 @@ Dataset.init(
           args: [1],
           msg: "number of classes must be >= 1",
         },
+        max: {
+          args: [50],
+          msg: "number of classes must be <= 50",
+        },
         isInt: {
           msg: "number of classes must be an integer",
         },
