@@ -129,7 +129,7 @@ class Controller {
                     model: Images_1.Image,
                     required: true,
                     where: {
-                        UUID: {
+                        id: {
                             [sequelize_1.Op.in]: imageIds,
                         },
                     },
@@ -147,7 +147,7 @@ class Controller {
             }
             // if images found are less than provided list
             if (images.length !== imageIds.length)
-                this.showNotAuthorizedItems(images, imageIds, "UUID");
+                this.showNotAuthorizedItems(images, imageIds, "id");
             return images;
         });
     }
@@ -155,7 +155,7 @@ class Controller {
     getUserToken() {
         return { token: this.user.token };
     }
-    // request must contains a list of uuids of images
+    // request must contains a list of ids of images
     // checks if images are owned by the authenticated user
     // returns the results of the inference done by the CNN model
     checkDoInference(request) {
@@ -168,7 +168,7 @@ class Controller {
                 // checks if the image has already an inference
                 if (images.length === 1) {
                     if (images[0].inference !== null) {
-                        return new Error(`image id ${images[0].UUID} has already an inference: ${images[0].inference}`);
+                        return new Error(`image id ${images[0].id} has already an inference: ${images[0].inference}`);
                     }
                 }
                 const COST = parseFloat(process.env.INFERENCE_COST);
@@ -179,7 +179,7 @@ class Controller {
             }
         });
     }
-    // request must contains a list of uuids of images and associated labels
+    // request must contains a list of ids of images and associated labels
     // checks if images are owned by the authenticated user
     // sets labels (real, fake) to the list of images
     checkSetLabel(request) {
@@ -244,10 +244,10 @@ class Controller {
                 const IS_VALID_FILE = Images_1.Image.isValidMimetype(file.mimetype);
                 let cost = parseFloat(process.env.INSERT_IMAGE_COST);
                 if (IS_VALID_FILE) {
-                    let uuids = yield this.repository.saveImage(file, request.datasetId, cost);
-                    if (Object.keys(uuids).length === 0)
+                    let ids = yield this.repository.saveImage(file, request.datasetId, cost);
+                    if (Object.keys(ids).length === 0)
                         return new Error("no images was valid");
-                    return uuids;
+                    return ids;
                 }
                 return new Error("file must be an image or a .zip of images");
             }

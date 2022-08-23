@@ -14,23 +14,23 @@ class Controller:
     """Internal function to get the metrics for the evaluation of the model
 
     Parameter
-        imagePredictions: dictionary with UUID, prediction and label of the predicted images
+        imagePredictions: dictionary with id, prediction and label of the predicted images
     
     Return
         result: dictionary with confusion matrix, precision, recall, f1 score 
-                and the valid UUID used for the evaluation of the model
+                and the valid id used for the evaluation of the model
     """
 
     def get_metrics(self, image_predictions):
 
         images_for_metrics = {"labelList": [],
-                              "predictionList": [], "UUIDList": []}
+                              "predictionList": [], "idList": []}
         for image in image_predictions:
             if image["label"] != "":
                 images_for_metrics["labelList"].append(image["label"])
                 images_for_metrics["predictionList"].append(
                     image["prediction"])
-                images_for_metrics["UUIDList"].append(image["UUID"])
+                images_for_metrics["idList"].append(image["id"])
 
         cm = confusion_matrix(
             images_for_metrics["labelList"], images_for_metrics["predictionList"], labels=["Real", "Fake"])
@@ -78,13 +78,13 @@ class Controller:
             values[index]["f1"] = f1[index] 
 
         result = {"cm": cm.tolist(), "values": values,
-                  "validUUID": images_for_metrics["UUIDList"]}
+                  "validId": images_for_metrics["idList"]}
         return result
 
     """Computes the predictions for the list of images passed in the json_request Json.
 
     Parameter
-        json_request: list of images with relative labels and UUID to be predicted (see variable 'schema' inside)
+        json_request: list of images with relative labels and id to be predicted (see variable 'schema' inside)
     
     Return
         result: json with the predictions for every image and metrics for evaluation of the model
@@ -104,12 +104,12 @@ class Controller:
                     "items": {
                         "type": "object",
                         "required": [
-                            "UUID",
+                            "id",
                             "path",
                             "label"
                         ],
                         "properties": {
-                            "UUID": {
+                            "id": {
                                 "type": "integer"
                             },
                             "path": {
@@ -140,7 +140,7 @@ class Controller:
             image_file = cv2.imread(image["path"])
 
             if image_file is None:
-                invalid_predictions.append(image["UUID"])
+                invalid_predictions.append(image["id"])
             else:
                 prediction = extract_and_predict_faces(image_file)
                 if prediction is not None:
@@ -149,11 +149,11 @@ class Controller:
                         can_get_confusion_matrix = True
 
                     image_predictions.append(
-                        {"UUID": image["UUID"], "prediction": prediction, "label": image["label"]})
+                        {"id": image["id"], "prediction": prediction, "label": image["label"]})
 
                 # instead if no face was found
                 else:
-                    invalid_predictions.append(image["UUID"])
+                    invalid_predictions.append(image["id"])
 
         if can_get_confusion_matrix:
             metrics = self.get_metrics(image_predictions)

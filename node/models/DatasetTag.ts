@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { DatabaseSingleton } from "../controller/repository/DatabaseSingleton";
+import { DatabaseSingleton } from "../db/DatabaseSingleton";
 import { Dataset } from "./Dataset";
 
 /*
@@ -10,7 +10,7 @@ export class DatasetTag extends Model {
   declare tag: string;
 }
 
-let sequelize = DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton.getInstance().sequelize;
 
 // relationship with database
 DatasetTag.init(

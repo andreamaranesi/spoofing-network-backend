@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Dataset = void 0;
 const sequelize_1 = require("sequelize");
-const DatabaseSingleton_1 = require("../controller/repository/DatabaseSingleton");
+const DatabaseSingleton_1 = require("../db/DatabaseSingleton");
 const User_1 = require("./User");
 /**
  * Dataset Model
@@ -10,7 +10,7 @@ const User_1 = require("./User");
 class Dataset extends sequelize_1.Model {
 }
 exports.Dataset = Dataset;
-let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance();
+let sequelize = DatabaseSingleton_1.DatabaseSingleton.getInstance().sequelize;
 // relationship with database
 Dataset.init({
     id: {

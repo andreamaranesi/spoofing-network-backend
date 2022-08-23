@@ -22,12 +22,12 @@ CREATE TABLE dataset(
 );
 
 CREATE TABLE image(
-    UUID INT NOT NULL AUTO_INCREMENT,
+    id INT NOT NULL AUTO_INCREMENT,
     label varchar(50),
     inference varchar(50),
     datasetId INT NOT NULL,
     fileName varchar(100) NOT NULL,
-    PRIMARY KEY(UUID),
+    PRIMARY KEY(id),
     FOREIGN KEY(datasetId) REFERENCES dataset(id)
 );
 
