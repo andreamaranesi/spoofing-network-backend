@@ -587,7 +587,14 @@ filename will be truncated if > 100 characters
 
 ```json
 {
-    "error": "Validation error: dataset name must be not empty,\nValidation error: number of classes must be >= 1"
+    "error": [
+        {
+            "value": -1,
+            "msg": "numClasses must be between 1 and 50",
+            "param": "numClasses",
+            "location": "body"
+        }
+    ]
 }
 ```
 
@@ -735,7 +742,14 @@ filename will be truncated if > 100 characters
 
 ```json
 {
-    "error": "Validation error: number of classes must be >= 1"
+    "error": [
+        {
+            "value": -1,
+            "msg": "numClasses must be between 1 and 50",
+            "param": "numClasses",
+            "location": "body"
+        }
+    ]
 }
 ```
 
