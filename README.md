@@ -12,11 +12,13 @@
 
 The goal of the project is to allow the creation of a back-end from which a user can upload datasets and make inferences on them.
 
-The predictions are made by our CNN network, trained to detect bonafide and fake people inside an image: 
+The predictions are made by our CNN network, trained to detect bonafide and fake people inside an image.
 
 [link]: https://github.com/andreamaranesi/Spoofing-Attack-Detection-2022
 
 Each user has a specified amount of **tokens**, that are required to upload images, create labels, make inferences.
+
+The network makes the inference on the most likely face found inside the image.
 
 The costs are the following:
 
@@ -103,7 +105,7 @@ User.init(
 The connection with the database is managed by a **Singleton** class, `DatabaseSingleton`:
 
 ```typescript
-let sequelize = DatabaseSingleton.getInstance().instance;
+let sequelize = DatabaseSingleton.getInstance().sequelize;
 ```
 
 `DatabaseSingleton.getInstance()` creates a **connection pool**:
