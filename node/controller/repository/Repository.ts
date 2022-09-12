@@ -9,7 +9,7 @@ import { Readable } from "stream";
 import * as moment from "moment";
 import axios from "axios";
 import { FindOptions, Includeable, Op } from "sequelize";
-import { BadRequestError, ForbiddenError, ServerError } from "../../factory/StatusCode";
+import { ConcreteErrorFactory } from "../../factory/ErrorFactory";
 
 /**
  * communicates with models
@@ -111,7 +111,7 @@ export class Repository {
       console.log("sottraggo" + (this.user.token - cost));
       await this.user.set({ token: this.user.token - cost }).save();
     } catch (err) {
-      throw new ServerError().setUpdatingToken();
+      throw new ConcreteErrorFactory().createServer().setUpdatingToken();
     }
   }
 
@@ -164,14 +164,18 @@ export class Repository {
           }
           resolve(images);
         })
-        .on("error", (error) => reject(new ServerError().set(error.message)));
+        .on("error", (error) =>
+          reject(new ConcreteErrorFactory().createServer().set(error.message))
+        );
     });
   }
 
   // checks if the user token amount is >= requested amount
   checkUserToken(user: User, amount: number): void {
     if (user.token < amount)
-      throw new ForbiddenError().setNeedMoreToken(amount);
+      throw new ConcreteErrorFactory()
+        .createForbidden()
+        .setNeedMoreToken(amount);
   }
 
   // saves images from an uploaded file or a .zip of images
@@ -195,11 +199,15 @@ export class Repository {
         .then(async (res) => {
           console.log(`statusCode: ${res.status}`);
           if (res.status !== 200 && res.status !== 201)
-            throw new ForbiddenError().setInvalidUrlResponse(url);
+            throw new ConcreteErrorFactory()
+              .createForbidden()
+              .setInvalidUrlResponse(url);
 
           let mimetype = res.headers["content-type"];
           if (!Image.isValidMimetype(mimetype)) {
-            throw new BadRequestError().setImageZipAbsent();
+            throw new ConcreteErrorFactory()
+              .createBadRequest()
+              .setImageZipAbsent();
           }
 
           // the file stream
@@ -234,7 +242,9 @@ export class Repository {
         .catch((error) => {
           // if it is an axios error
           if (error.response !== undefined) {
-            throw new ForbiddenError().setUnreadableUrl(url);
+            throw new ConcreteErrorFactory()
+              .createForbidden()
+              .setUnreadableUrl(url);
           }
           throw error;
         });
@@ -450,7 +460,7 @@ export class Repository {
         return res.data;
       })
       .catch((err) => {
-        throw new ServerError().set(err.message);
+        throw new ConcreteErrorFactory().createServer().set(err.message);
       });
   }
 
@@ -468,7 +478,9 @@ export class Repository {
       try {
         await this.updateUserTokenByCost(this.user, cost);
       } catch {
-        throw new ServerError().setAlreadyUpdatedLabels(updatedImages);
+        throw new ConcreteErrorFactory()
+          .createServer()
+          .setAlreadyUpdatedLabels(updatedImages);
       }
 
       await images[i].set({ label: labels[i] }).save();

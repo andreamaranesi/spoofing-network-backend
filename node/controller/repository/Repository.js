@@ -21,7 +21,7 @@ const stream_1 = require("stream");
 const moment = require("moment");
 const axios_1 = require("axios");
 const sequelize_1 = require("sequelize");
-const StatusCode_1 = require("../../factory/StatusCode");
+const ErrorFactory_1 = require("../../factory/ErrorFactory");
 /**
  * communicates with models
  * models are the DAO level
@@ -106,7 +106,7 @@ class Repository {
                 yield this.user.set({ token: this.user.token - cost }).save();
             }
             catch (err) {
-                throw new StatusCode_1.ServerError().setUpdatingToken();
+                throw new ErrorFactory_1.ConcreteErrorFactory().createServer().setUpdatingToken();
             }
         });
     }
@@ -151,14 +151,16 @@ class Repository {
                     }
                     resolve(images);
                 }))
-                    .on("error", (error) => reject(new StatusCode_1.ServerError().set(error.message)));
+                    .on("error", (error) => reject(new ErrorFactory_1.ConcreteErrorFactory().createServer().set(error.message)));
             });
         });
     }
     // checks if the user token amount is >= requested amount
     checkUserToken(user, amount) {
         if (user.token < amount)
-            throw new StatusCode_1.ForbiddenError().setNeedMoreToken(amount);
+            throw new ErrorFactory_1.ConcreteErrorFactory()
+                .createForbidden()
+                .setNeedMoreToken(amount);
     }
     // saves images from an uploaded file or a .zip of images
     // downloads image or .zip from an URL if the URL is specified
@@ -175,10 +177,14 @@ class Repository {
                     .then((res) => __awaiter(this, void 0, void 0, function* () {
                     console.log(`statusCode: ${res.status}`);
                     if (res.status !== 200 && res.status !== 201)
-                        throw new StatusCode_1.ForbiddenError().setInvalidUrlResponse(url);
+                        throw new ErrorFactory_1.ConcreteErrorFactory()
+                            .createForbidden()
+                            .setInvalidUrlResponse(url);
                     let mimetype = res.headers["content-type"];
                     if (!Images_1.Image.isValidMimetype(mimetype)) {
-                        throw new StatusCode_1.BadRequestError().setImageZipAbsent();
+                        throw new ErrorFactory_1.ConcreteErrorFactory()
+                            .createBadRequest()
+                            .setImageZipAbsent();
                     }
                     // the file stream
                     file = res.data;
@@ -205,7 +211,9 @@ class Repository {
                     .catch((error) => {
                     // if it is an axios error
                     if (error.response !== undefined) {
-                        throw new StatusCode_1.ForbiddenError().setUnreadableUrl(url);
+                        throw new ErrorFactory_1.ConcreteErrorFactory()
+                            .createForbidden()
+                            .setUnreadableUrl(url);
                     }
                     throw error;
                 });
@@ -374,7 +382,7 @@ class Repository {
                 return res.data;
             }))
                 .catch((err) => {
-                throw new StatusCode_1.ServerError().set(err.message);
+                throw new ErrorFactory_1.ConcreteErrorFactory().createServer().set(err.message);
             });
         });
     }
@@ -389,7 +397,9 @@ class Repository {
                     yield this.updateUserTokenByCost(this.user, cost);
                 }
                 catch (_a) {
-                    throw new StatusCode_1.ServerError().setAlreadyUpdatedLabels(updatedImages);
+                    throw new ErrorFactory_1.ConcreteErrorFactory()
+                        .createServer()
+                        .setAlreadyUpdatedLabels(updatedImages);
                 }
                 yield images[i].set({ label: labels[i] }).save();
                 updatedImages.push(images[i]);

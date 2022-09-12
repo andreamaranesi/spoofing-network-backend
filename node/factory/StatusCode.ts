@@ -72,10 +72,6 @@ export class BadRequestError extends StatusCode {
     return this;
   }
 
-  setTokenExpired(): StatusCode {
-    return this.set("Token expired");
-  }
-
   setImageZipAbsent(): StatusCode {
     return this.set("an image or .zip must be provided");
   }

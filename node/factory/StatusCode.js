@@ -54,9 +54,6 @@ class BadRequestError extends StatusCode {
         response.status(400).send(this.message);
         return this;
     }
-    setTokenExpired() {
-        return this.set("Token expired");
-    }
     setImageZipAbsent() {
         return this.set("an image or .zip must be provided");
     }

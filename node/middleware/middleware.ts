@@ -1,4 +1,4 @@
-import { AuthenticationError } from "../factory/StatusCode";
+import { ConcreteErrorFactory } from "../factory/ErrorFactory";
 import { User } from "../models/User";
 const jwt = require("jsonwebtoken");
 
@@ -23,7 +23,11 @@ export const verifyAndAuthenticate = async (req, res, next) => {
       next(new Error(`user with email ${req.user.email} doesn't exist`));
   } catch (error) {
     if (typeof error === "object")
-      if (error.name == "TokenExpiredError") new AuthenticationError().setTokenExpired().send(res);
+      if (error.name == "TokenExpiredError")
+        new ConcreteErrorFactory()
+          .createAuthentication()
+          .setTokenExpired()
+          .send(res);
       else next(new Error(error.message));
     else next(new Error(error));
   }
@@ -34,18 +38,18 @@ export const verifyAndAuthenticate = async (req, res, next) => {
 // validate the token amount of the default user
 export const verifyTokenAmount = async (req, res, next) => {
   if (req.user.token == 0 && !req.user.isAdmin) {
-    new AuthenticationError().setTokenZero().send(res);
+    new ConcreteErrorFactory().createAuthentication().setTokenZero().send(res);
   } else next();
 };
 
 // send back the error message
 export const authenticationErrorHandler = (err, req, res, next) => {
-  new AuthenticationError().set(err.message).send(res);
+  new ConcreteErrorFactory().createAuthentication().set(err.message).send(res);
 };
 
 // check if the user is the admin
 export const isAdmin = (req, res, next) => {
   if (!req.user.isAdmin)
-    new AuthenticationError().setNotAdmin().send(res);
+    new ConcreteErrorFactory().createAuthentication().setNotAdmin().send(res);
   else next();
 };

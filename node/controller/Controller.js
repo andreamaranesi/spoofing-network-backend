@@ -15,7 +15,7 @@ const User_1 = require("../models/User");
 const Repository_1 = require("./repository/Repository");
 const Images_1 = require("../models/Images");
 const sequelize_1 = require("sequelize");
-const StatusCode_1 = require("../factory/StatusCode");
+const ErrorFactory_1 = require("../factory/ErrorFactory");
 /**
  * manages and checks user routes
  */
@@ -39,7 +39,7 @@ class Controller {
             ids.push(result[key]);
         }
         let difference = originalList.filter((id) => !ids.includes(id));
-        throw new StatusCode_1.ForbiddenError().setNotAccessible(difference);
+        throw new ErrorFactory_1.ConcreteErrorFactory().createForbidden().setNotAccessible(difference);
     }
     // checks if dataset id is owned by the authenticated user
     // returns the datasets found
@@ -76,7 +76,7 @@ class Controller {
                 }
                 let dataset = yield Dataset_1.Dataset.scope("visible").findOne(FILTER_OPTIONS);
                 if (dataset !== null)
-                    throw new StatusCode_1.ForbiddenError().setDatasetSameName(name);
+                    throw new ErrorFactory_1.ConcreteErrorFactory().createForbidden().setDatasetSameName(name);
             }
         });
     }
@@ -163,13 +163,13 @@ class Controller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (this.checkDuplicateEntries(request.images))
-                    return new StatusCode_1.BadRequestError().setDuplicateImageEntries();
+                    return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setDuplicateImageEntries();
                 let images = yield this.checkUserImages(request.images);
                 // if user gives one image
                 // checks if the image has already an inference
                 if (images.length === 1) {
                     if (images[0].inference !== null) {
-                        return new StatusCode_1.BadRequestError().setImageWithInference(images[0].id, images[0].inference);
+                        return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setImageWithInference(images[0].id, images[0].inference);
                     }
                 }
                 const COST = parseFloat(process.env.INFERENCE_COST);
@@ -187,10 +187,10 @@ class Controller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (this.checkDuplicateEntries(request.images))
-                    return new StatusCode_1.BadRequestError().setDuplicateImageEntries();
+                    return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setDuplicateImageEntries();
                 // the length of the labels must be equal to that of the images
                 if (request.images.length !== request.labels.length)
-                    return new StatusCode_1.BadRequestError().setLabelImageLength();
+                    return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setLabelImageLength();
                 let images = yield this.checkUserImages(request.images);
                 const COST = parseFloat(process.env.LABEL_COST);
                 this.repository.checkUserToken(this.user, COST * images.length);
@@ -224,7 +224,7 @@ class Controller {
                     },
                 });
                 if (userToUpdate === null)
-                    throw new StatusCode_1.ForbiddenError().setNoEmail(request.email);
+                    throw new ErrorFactory_1.ConcreteErrorFactory().createForbidden().setNoEmail(request.email);
                 return yield this.repository.updateUserToken(userToUpdate, request.token);
             }
             catch (error) {
@@ -239,7 +239,7 @@ class Controller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (file === null || file.images === undefined)
-                    return new StatusCode_1.BadRequestError().setImageZipAbsent();
+                    return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setImageZipAbsent();
                 yield this.checkUserDataset(request.datasetId);
                 file = file.images;
                 const IS_VALID_FILE = Images_1.Image.isValidMimetype(file.mimetype);
@@ -247,10 +247,10 @@ class Controller {
                 if (IS_VALID_FILE) {
                     let ids = yield this.repository.saveImage(file, request.datasetId, cost);
                     if (Object.keys(ids).length === 0)
-                        return new StatusCode_1.BadRequestError().setNoValidImages();
+                        return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setNoValidImages();
                     return ids;
                 }
-                return new StatusCode_1.BadRequestError().setImageZipAbsent();
+                return new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().setImageZipAbsent();
             }
             catch (error) {
                 return error;

@@ -8,7 +8,8 @@ import {
 } from "./middleware/middleware";
 import * as fileUpload from "express-fileupload";
 import { body, oneOf, validationResult } from "express-validator";
-import { BadRequestError, StatusCode } from "./factory/StatusCode";
+import { StatusCode } from "./factory/StatusCode";
+import { ConcreteErrorFactory } from "./factory/ErrorFactory";
 
 var express = require("express");
 var app = express();
@@ -36,7 +37,7 @@ const checkValidation = function (res, errors) {
 
 // send back validation errors
 const sendValidationError = function (res, errors) {
-  new BadRequestError().set(errors.array()).send(res);
+  new ConcreteErrorFactory().createBadRequest().set(errors.array()).send(res);
 };
 
 const validateListImages = [

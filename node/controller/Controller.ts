@@ -3,7 +3,8 @@ import { User } from "../models/User";
 import { Repository } from "./repository/Repository";
 import { Image } from "../models/Images";
 import { FindOptions, Includeable, Op } from "sequelize";
-import { BadRequestError, ForbiddenError, StatusCode } from "../factory/StatusCode";
+import { StatusCode } from "../factory/StatusCode";
+import { ConcreteErrorFactory } from "../factory/ErrorFactory";
 
 /**
  * manages and checks user routes
@@ -31,7 +32,7 @@ export class Controller {
     list: any,
     originalList: Array<any>,
     key: string
-  ): ForbiddenError {
+  ): StatusCode {
     let ids: Array<any> = [];
     for (let result of list) {
       ids.push(result[key]);
@@ -39,7 +40,7 @@ export class Controller {
 
     let difference = originalList.filter((id) => !ids.includes(id));
 
-    throw new ForbiddenError().setNotAccessible(difference);
+    throw new ConcreteErrorFactory().createForbidden().setNotAccessible(difference);
   }
 
   // checks if dataset id is owned by the authenticated user
@@ -81,7 +82,7 @@ export class Controller {
       }
 
       let dataset = await Dataset.scope("visible").findOne(FILTER_OPTIONS);
-      if (dataset !== null) throw new ForbiddenError().setDatasetSameName(name);
+      if (dataset !== null) throw new ConcreteErrorFactory().createForbidden().setDatasetSameName(name);
     }
   }
   // returns a new dataset instance
@@ -169,7 +170,7 @@ export class Controller {
   async checkDoInference(request: any): Promise<Object | StatusCode> {
     try {
       if (this.checkDuplicateEntries(request.images))
-        return new BadRequestError().setDuplicateImageEntries();
+        return new ConcreteErrorFactory().createBadRequest().setDuplicateImageEntries();
 
       let images = await this.checkUserImages(request.images);
 
@@ -177,7 +178,7 @@ export class Controller {
       // checks if the image has already an inference
       if (images.length === 1) {
         if (images[0].inference !== null) {
-          return new BadRequestError().setImageWithInference(
+          return new ConcreteErrorFactory().createBadRequest().setImageWithInference(
             images[0].id,
             images[0].inference
           );
@@ -198,11 +199,11 @@ export class Controller {
   async checkSetLabel(request: any): Promise<Array<Object> | StatusCode> {
     try {
       if (this.checkDuplicateEntries(request.images))
-        return new BadRequestError().setDuplicateImageEntries();
+        return new ConcreteErrorFactory().createBadRequest().setDuplicateImageEntries();
 
       // the length of the labels must be equal to that of the images
       if (request.images.length !== request.labels.length)
-        return new BadRequestError().setLabelImageLength();
+        return new ConcreteErrorFactory().createBadRequest().setLabelImageLength();
 
       let images = await this.checkUserImages(request.images);
 
@@ -238,7 +239,7 @@ export class Controller {
       });
 
       if (userToUpdate === null)
-        throw new ForbiddenError().setNoEmail(request.email);
+        throw new ConcreteErrorFactory().createForbidden().setNoEmail(request.email);
 
       return await this.repository.updateUserToken(userToUpdate, request.token);
     } catch (error) {
@@ -255,7 +256,7 @@ export class Controller {
   ): Promise<Object | StatusCode> {
     try {
       if (file === null || file.images === undefined)
-        return new BadRequestError().setImageZipAbsent();
+        return new ConcreteErrorFactory().createBadRequest().setImageZipAbsent();
 
       await this.checkUserDataset(request.datasetId);
 
@@ -272,11 +273,11 @@ export class Controller {
           cost
         );
         if (Object.keys(ids).length === 0)
-          return new BadRequestError().setNoValidImages();
+          return new ConcreteErrorFactory().createBadRequest().setNoValidImages();
         return ids;
       }
 
-      return new BadRequestError().setImageZipAbsent();
+      return new ConcreteErrorFactory().createBadRequest().setImageZipAbsent();
     } catch (error) {
       return error;
     }

@@ -14,6 +14,7 @@ const middleware_1 = require("./middleware/middleware");
 const fileUpload = require("express-fileupload");
 const express_validator_1 = require("express-validator");
 const StatusCode_1 = require("./factory/StatusCode");
+const ErrorFactory_1 = require("./factory/ErrorFactory");
 var express = require("express");
 var app = express();
 app.use(middleware_1.checkToken);
@@ -39,7 +40,7 @@ const checkValidation = function (res, errors) {
 };
 // send back validation errors
 const sendValidationError = function (res, errors) {
-    new StatusCode_1.BadRequestError().set(errors.array()).send(res);
+    new ErrorFactory_1.ConcreteErrorFactory().createBadRequest().set(errors.array()).send(res);
 };
 const validateListImages = [
     (0, express_validator_1.body)("images")
