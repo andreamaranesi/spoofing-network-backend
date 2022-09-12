@@ -173,6 +173,34 @@ app.get("/get/token", async function (req, res) {
 });
 ```
 
+Moreover, error responses are managed by the **ErrorFactory**:
+
+```typescript
+export interface ErrorFactory {
+  createAuthentication(): StatusCode;
+  createBadRequest(): StatusCode;
+  createServer(): StatusCode;
+  createForbidden(): StatusCode;
+}
+```
+
+Each class manages custom error messages, for example
+
+```typescript
+ setNeedMoreToken(tokenAmout: number): StatusCode {
+    return this.set(`you need ${tokenAmout} tokens for this operation`);
+ }
+```
+
+and send back the response:
+
+```typescript
+send(response: any): StatusCode {
+    response.status(403).send(this.message);
+    return this;
+ }
+```
+
 
 
 ## <a id="routes">ROUTES</a>
