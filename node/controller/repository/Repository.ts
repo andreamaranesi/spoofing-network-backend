@@ -9,13 +9,13 @@ import { Readable } from "stream";
 import * as moment from "moment";
 import axios from "axios";
 import { FindOptions, Includeable, Op } from "sequelize";
+import { BadRequestError, ForbiddenError, ServerError } from "../../factory/StatusCode";
 
 /**
  * communicates with models
  * models are the DAO level
  */
 export class Repository {
-
   // all actions require a default user
   private user: User;
 
@@ -39,7 +39,7 @@ export class Repository {
 
     // creates tags
     // removes duplicated tags
-    let createdTags = await this.createTags([... new Set(tags)], dataset.id);
+    let createdTags = await this.createTags([...new Set(tags)], dataset.id);
 
     return { dataset: dataset, tags: createdTags };
   }
@@ -70,7 +70,6 @@ export class Repository {
   // updates a user dataset
   // returns the dataset and related tags
   async updateDataset(datasetJson: any, dataset: Dataset): Promise<Object> {
-
     // updates dataset instance
     await dataset.set(datasetJson).save();
 
@@ -79,9 +78,8 @@ export class Repository {
     // updates tags if not undefined
     // deletes tags if new tags have been defined
     if (datasetJson.tags !== undefined) {
-
       // remove duplicated entries
-      datasetJson.tags = [... new Set(datasetJson.tags)];
+      datasetJson.tags = [...new Set(datasetJson.tags)];
 
       await DatasetTag.destroy({ where: { datasetId: dataset.id } });
       createdTags = await this.createTags(datasetJson.tags, dataset.id);
@@ -113,7 +111,7 @@ export class Repository {
       console.log("sottraggo" + (this.user.token - cost));
       await this.user.set({ token: this.user.token - cost }).save();
     } catch (err) {
-      throw new Error("error on updating token");
+      throw new ServerError().setUpdatingToken();
     }
   }
 
@@ -144,7 +142,6 @@ export class Repository {
           } else entry.autodrain();
         })
         .on("close", async () => {
-
           // the final cost to upload the valid images
           let finalCost = cost * bufferList.length;
 
@@ -167,14 +164,14 @@ export class Repository {
           }
           resolve(images);
         })
-        .on("error", (error) => reject(error));
+        .on("error", (error) => reject(new ServerError().set(error.message)));
     });
   }
 
   // checks if the user token amount is >= requested amount
   checkUserToken(user: User, amount: number): void {
     if (user.token < amount)
-      throw new Error(`you need ${amount} tokens for this operation`);
+      throw new ForbiddenError().setNeedMoreToken(amount);
   }
 
   // saves images from an uploaded file or a .zip of images
@@ -197,13 +194,12 @@ export class Repository {
         .get(url, { responseType: "stream" })
         .then(async (res) => {
           console.log(`statusCode: ${res.status}`);
-          if (res.status !== 200) throw new Error("can't access the file");
+          if (res.status !== 200 && res.status !== 201)
+            throw new ForbiddenError().setInvalidUrlResponse(url);
 
           let mimetype = res.headers["content-type"];
           if (!Image.isValidMimetype(mimetype)) {
-            throw new Error(
-              "you must give an URL with supported images or zip file"
-            );
+            throw new BadRequestError().setImageZipAbsent();
           }
 
           // the file stream
@@ -225,7 +221,7 @@ export class Repository {
             );
             imageJson[fileName] = image.id;
             return imageJson;
-          } 
+          }
           // if the file is a .zip
           else if (mimetype.includes("zip")) {
             // will write the .zip images on the storage if the user token amount is sufficient
@@ -235,15 +231,14 @@ export class Repository {
 
           return {};
         })
-        .catch((err) => {
+        .catch((error) => {
           // if it is an axios error
-          if(err.response !== undefined){
-            throw new Error("unreadable url");
+          if (error.response !== undefined) {
+            throw new ForbiddenError().setUnreadableUrl(url);
           }
-          throw new Error(err.message);
+          throw error;
         });
     } else {
-
       // user uploaded a file
 
       // if the file is an .image, will move it on the storage
@@ -280,7 +275,6 @@ export class Repository {
     createPath: boolean = false,
     python: boolean = false
   ): string {
-
     // returns the directory path
     let finalPath = path.join(
       python
@@ -319,12 +313,11 @@ export class Repository {
   // returns the list of datasets found
   async getDatasetList(filters: any): Promise<Array<Dataset>> {
     let tags = filters.tags;
-    let date = [filters.startDate, filters.endDate]; 
+    let date = [filters.startDate, filters.endDate];
     let tagRelationship = filters.tagRelationship ?? "or";
 
     // returns filter operator and value
     const checkStartDate = (arg: Array<string>): [any, any] => {
-
       // if date is not a filter
       // returns null
       if (arg.every((x) => x === undefined)) return null;
@@ -358,7 +351,6 @@ export class Repository {
     ];
 
     if (tags !== undefined) {
-
       // to remove duplicated entries
       tags = [...new Set(tags)];
 
@@ -376,7 +368,7 @@ export class Repository {
     // final Sequelize filtering options
     const FILTER_OPTIONS: FindOptions = {
       where: {
-        userId: this.user.id
+        userId: this.user.id,
       },
       include: includeOptions,
     };
@@ -403,7 +395,6 @@ export class Repository {
   // if some images can't be inferred, chargebacks the cost
   // returns json of predictions and metrics
   async getInference(images: Array<Image>, cost: number): Promise<Object> {
-
     await this.updateUserTokenByCost(this.user, cost * images.length);
 
     // create JSON for python backend
@@ -427,7 +418,6 @@ export class Repository {
         }
       )
       .then(async (res) => {
-
         let data = res.data;
 
         let invalidImages = data.invalidPredictions;
@@ -435,7 +425,6 @@ export class Repository {
         // chargeback if there are invalid images
         // for example no human faces or corrupted images
         if (invalidImages.length > 0) {
-          
           // updates user data from database
           // the request maybe was too long and the user did other requests
           this.user = await User.findByPk(this.user.id);
@@ -461,7 +450,7 @@ export class Repository {
         return res.data;
       })
       .catch((err) => {
-        throw new Error(err);
+        throw new ServerError().set(err.message);
       });
   }
 
@@ -479,10 +468,7 @@ export class Repository {
       try {
         await this.updateUserTokenByCost(this.user, cost);
       } catch {
-        throw new Error(
-          "there was an error. List of already saved labels: " +
-            JSON.stringify(updatedImages)
-        );
+        throw new ServerError().setAlreadyUpdatedLabels(updatedImages);
       }
 
       await images[i].set({ label: labels[i] }).save();

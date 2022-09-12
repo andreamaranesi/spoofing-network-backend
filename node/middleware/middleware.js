@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isAdmin = exports.errorHandler = exports.verifyTokenAmount = exports.verifyAndAuthenticate = exports.checkToken = void 0;
+exports.isAdmin = exports.authenticationErrorHandler = exports.verifyTokenAmount = exports.verifyAndAuthenticate = exports.checkToken = void 0;
+const StatusCode_1 = require("../factory/StatusCode");
 const User_1 = require("../models/User");
 const jwt = require("jsonwebtoken");
 // check the Authorization token is not empty
@@ -36,9 +37,9 @@ const verifyAndAuthenticate = (req, res, next) => __awaiter(void 0, void 0, void
     catch (error) {
         if (typeof error === "object")
             if (error.name == "TokenExpiredError")
-                res.status(401).send({ error: "Token Expired" });
+                new StatusCode_1.AuthenticationError().setTokenExpired().send(res);
             else
-                res.status(401).send({ error: error.message });
+                next(new Error(error.message));
         else
             next(new Error(error));
     }
@@ -48,21 +49,21 @@ exports.verifyAndAuthenticate = verifyAndAuthenticate;
 // validate the token amount of the default user
 const verifyTokenAmount = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (req.user.token == 0 && !req.user.isAdmin) {
-        res.status(401).send({ error: "Token amount is 0" });
+        new StatusCode_1.AuthenticationError().setTokenZero().send(res);
     }
     else
         next();
 });
 exports.verifyTokenAmount = verifyTokenAmount;
 // send back the error message
-const errorHandler = (err, req, res, next) => {
-    res.status(401).send({ error: err.message });
+const authenticationErrorHandler = (err, req, res, next) => {
+    new StatusCode_1.AuthenticationError().set(err.message).send(res);
 };
-exports.errorHandler = errorHandler;
+exports.authenticationErrorHandler = authenticationErrorHandler;
 // check if the user is the admin
 const isAdmin = (req, res, next) => {
     if (!req.user.isAdmin)
-        res.status(401).send({ error: "user must be the admin" });
+        new StatusCode_1.AuthenticationError().setNotAdmin().send(res);
     else
         next();
 };

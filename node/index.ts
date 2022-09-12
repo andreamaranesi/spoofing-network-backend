@@ -3,11 +3,12 @@ import {
   checkToken,
   verifyAndAuthenticate,
   verifyTokenAmount,
-  errorHandler,
+  authenticationErrorHandler,
   isAdmin,
 } from "./middleware/middleware";
 import * as fileUpload from "express-fileupload";
 import { body, oneOf, validationResult } from "express-validator";
+import { BadRequestError, StatusCode } from "./factory/StatusCode";
 
 var express = require("express");
 var app = express();
@@ -15,12 +16,12 @@ var app = express();
 app.use(checkToken);
 app.use(verifyAndAuthenticate);
 app.use(verifyTokenAmount);
-app.use(errorHandler);
+app.use(authenticationErrorHandler);
 
 app.get("/get/token", async function (req, res) {
   let controller = new Controller(req.user);
   const RESULT = controller.getUserToken();
-  if (RESULT instanceof Error) res.status(500).send({ error: RESULT.message });
+  if (RESULT instanceof StatusCode) RESULT.send(res);
   else res.json(RESULT);
 });
 
@@ -35,7 +36,7 @@ const checkValidation = function (res, errors) {
 
 // send back validation errors
 const sendValidationError = function (res, errors) {
-  res.status(500).send({ error: errors.array() });
+  new BadRequestError().set(errors.array()).send(res);
 };
 
 const validateListImages = [
@@ -61,7 +62,7 @@ const validateTags = [
 ];
 
 // route to create a new dataset
-app.get(
+app.post(
   "/create/dataset",
   body("name")
     .exists()
@@ -76,19 +77,16 @@ app.get(
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
-      checkValidation(res, validationResult(req));
-
       let controller = new Controller(req.user);
       const DATASET = await controller.checkCreateDataset(req.body);
-      if (DATASET instanceof Error)
-        res.status(500).send({ error: DATASET.message });
-      else res.json(DATASET);
+      if (DATASET instanceof StatusCode) DATASET.send(res);
+      else res.status(201).json(DATASET);
     }
   }
 );
 
 // route to update a dataset
-app.get(
+app.post(
   "/update/dataset",
   body("datasetId").isInt(),
   body("name")
@@ -113,8 +111,7 @@ app.get(
     else {
       let controller = new Controller(req.user);
       const DATASET = await controller.checkUpdateDataset(req.body);
-      if (DATASET instanceof Error)
-        res.status(500).send({ error: DATASET.message });
+      if (DATASET instanceof StatusCode) DATASET.send(res);
       else res.json(DATASET);
     }
   }
@@ -130,8 +127,7 @@ app.get(
     else {
       let controller = new Controller(req.user);
       const DATASET = await controller.checkDeleteDataset(req.body);
-      if (DATASET instanceof Error)
-        res.status(500).send({ error: DATASET.message });
+      if (DATASET instanceof StatusCode) DATASET.send(res);
       else res.json(DATASET);
     }
   }
@@ -167,8 +163,7 @@ app.get(
     else {
       let controller = new Controller(req.user);
       const DATASET = await controller.checkGetDataset(req.body);
-      if (DATASET instanceof Error)
-        res.status(500).send({ error: DATASET.message });
+      if (DATASET instanceof StatusCode) DATASET.send(res);
       else res.json(DATASET);
     }
   }
@@ -189,8 +184,7 @@ app.get(
     else {
       let controller = new Controller(req.user);
       const RESULT = await controller.checkSetToken(req.body);
-      if (RESULT instanceof Error)
-        res.status(500).send({ error: RESULT.message });
+      if (RESULT instanceof StatusCode) RESULT.send(res);
       else res.json(RESULT);
     }
   }
@@ -203,8 +197,7 @@ app.get("/get/inference", validateListImages, async function (req, res) {
   else {
     let controller = new Controller(req.user);
     const RESULT = await controller.checkDoInference(req.body);
-    if (RESULT instanceof Error)
-      res.status(500).send({ error: RESULT.message });
+    if (RESULT instanceof StatusCode) RESULT.send(res);
     else res.json(RESULT);
   }
 });
@@ -224,8 +217,7 @@ app.get(
     else {
       let controller = new Controller(req.user);
       const RESULT = await controller.checkSetLabel(req.body);
-      if (RESULT instanceof Error)
-        res.status(500).send({ error: RESULT.message });
+      if (RESULT instanceof StatusCode) RESULT.send(res);
       else res.json(RESULT);
     }
   }
@@ -244,8 +236,7 @@ app.get(
     else {
       let controller = new Controller(req.user);
       const RESULT = await controller.checkInsertImagesFromUrl(req.body);
-      if (RESULT instanceof Error)
-        res.status(500).send({ error: RESULT.message });
+      if (RESULT instanceof StatusCode) RESULT.send(res);
       else res.json(RESULT);
     }
   }
@@ -264,8 +255,7 @@ app.post("/images/file", body("datasetId").isInt(), async function (req, res) {
       req.files,
       req.body
     );
-    if (RESULT instanceof Error)
-      res.status(500).send({ error: RESULT.message });
+    if (RESULT instanceof StatusCode) RESULT.send(res);
     else res.json(RESULT);
   }
 });

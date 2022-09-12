@@ -3,6 +3,7 @@ import { User } from "../models/User";
 import { Repository } from "./repository/Repository";
 import { Image } from "../models/Images";
 import { FindOptions, Includeable, Op } from "sequelize";
+import { BadRequestError, ForbiddenError, StatusCode } from "../factory/StatusCode";
 
 /**
  * manages and checks user routes
@@ -30,7 +31,7 @@ export class Controller {
     list: any,
     originalList: Array<any>,
     key: string
-  ): void {
+  ): ForbiddenError {
     let ids: Array<any> = [];
     for (let result of list) {
       ids.push(result[key]);
@@ -38,7 +39,7 @@ export class Controller {
 
     let difference = originalList.filter((id) => !ids.includes(id));
 
-    throw new Error(difference.join(",") + ` id(s) are not accessible`);
+    throw new ForbiddenError().setNotAccessible(difference);
   }
 
   // checks if dataset id is owned by the authenticated user
@@ -80,27 +81,28 @@ export class Controller {
       }
 
       let dataset = await Dataset.scope("visible").findOne(FILTER_OPTIONS);
-
-      if (dataset !== null)
-        throw new Error(`there is already a dataset with name ${name}`);
+      if (dataset !== null) throw new ForbiddenError().setDatasetSameName(name);
     }
   }
   // returns a new dataset instance
-  async checkCreateDataset(datasetJson: any): Promise<Object | Error> {
+  async checkCreateDataset(datasetJson: any): Promise<Object | StatusCode> {
     try {
       await this.checkDatasetWithSameName(datasetJson.name);
       return await this.repository.createDataset(datasetJson);
     } catch (error) {
-      return new Error(error.message);
+      return error;
     }
   }
 
   // checks if dataset id is owned by the authenticated user
   // updates the dataset
   // returns the updated dataset
-  async checkUpdateDataset(datasetJson: any): Promise<Object | Error> {
+  async checkUpdateDataset(datasetJson: any): Promise<Object | StatusCode> {
     try {
-      await this.checkDatasetWithSameName(datasetJson.name, datasetJson.datasetId);
+      await this.checkDatasetWithSameName(
+        datasetJson.name,
+        datasetJson.datasetId
+      );
 
       let dataset = await this.checkUserDataset(datasetJson.datasetId);
 
@@ -108,17 +110,17 @@ export class Controller {
 
       return await this.repository.updateDataset(datasetJson, dataset[0]);
     } catch (error) {
-      return new Error(error.message);
+      return error;
     }
   }
 
   // checks if dataset id is owned by the authenticated user
   // returns a list of Dataset filtering by date of creation and/or associated tags
-  async checkGetDataset(filters: any): Promise<Array<Object> | Error> {
+  async checkGetDataset(filters: any): Promise<Array<Object> | StatusCode> {
     try {
       return await this.repository.getDatasetList(filters);
     } catch (error) {
-      return new Error(error.message);
+      return error;
     }
   }
 
@@ -164,10 +166,10 @@ export class Controller {
   // request must contains a list of ids of images
   // checks if images are owned by the authenticated user
   // returns the results of the inference done by the CNN model
-  async checkDoInference(request: any): Promise<Object | Error> {
+  async checkDoInference(request: any): Promise<Object | StatusCode> {
     try {
       if (this.checkDuplicateEntries(request.images))
-        return new Error("there are duplicated entries on images");
+        return new BadRequestError().setDuplicateImageEntries();
 
       let images = await this.checkUserImages(request.images);
 
@@ -175,8 +177,9 @@ export class Controller {
       // checks if the image has already an inference
       if (images.length === 1) {
         if (images[0].inference !== null) {
-          return new Error(
-            `image id ${images[0].id} has already an inference: ${images[0].inference}`
+          return new BadRequestError().setImageWithInference(
+            images[0].id,
+            images[0].inference
           );
         }
       }
@@ -184,23 +187,22 @@ export class Controller {
       const COST = parseFloat(process.env.INFERENCE_COST);
 
       return await this.repository.getInference(images, COST);
-      
-    } catch (err) {
-      return new Error(err.message);
+    } catch (error) {
+      return error;
     }
   }
 
   // request must contains a list of ids of images and associated labels
   // checks if images are owned by the authenticated user
   // sets labels (real, fake) to the list of images
-  async checkSetLabel(request: any): Promise<Array<Object> | Error> {
+  async checkSetLabel(request: any): Promise<Array<Object> | StatusCode> {
     try {
       if (this.checkDuplicateEntries(request.images))
-        return new Error("there are duplicated entries on images");
+        return new BadRequestError().setDuplicateImageEntries();
 
       // the length of the labels must be equal to that of the images
       if (request.images.length !== request.labels.length)
-        return new Error("labels length must be equal to images length");
+        return new BadRequestError().setLabelImageLength();
 
       let images = await this.checkUserImages(request.images);
 
@@ -209,25 +211,25 @@ export class Controller {
       this.repository.checkUserToken(this.user, COST * images.length);
 
       return await this.repository.setLabel(images, request.labels, COST);
-    } catch (err) {
-      return new Error(err.message);
+    } catch (error) {
+      return error;
     }
   }
 
   // checks if dataset is owned by the authenticated user
   // deletes (logically) the dataset
-  async checkDeleteDataset(request: any): Promise<Object | Error> {
+  async checkDeleteDataset(request: any): Promise<Object | StatusCode> {
     try {
       let dataset = await this.checkUserDataset(request.datasetId);
 
       return await this.repository.deleteDataset(dataset[0]);
-    } catch (err) {
-      return new Error(err.message);
+    } catch (error) {
+      return error;
     }
   }
 
   // updates a specified user token
-  async checkSetToken(request: any): Promise<Object | Error> {
+  async checkSetToken(request: any): Promise<Object | StatusCode> {
     try {
       let userToUpdate = await User.findOne({
         where: {
@@ -236,11 +238,11 @@ export class Controller {
       });
 
       if (userToUpdate === null)
-        throw new Error(`user with email ${request.email} doesn't exist`);
+        throw new ForbiddenError().setNoEmail(request.email);
 
       return await this.repository.updateUserToken(userToUpdate, request.token);
-    } catch (err) {
-      return new Error(err.message);
+    } catch (error) {
+      return error;
     }
   }
 
@@ -250,10 +252,10 @@ export class Controller {
   async checkInsertImagesFromFile(
     file: any,
     request: any
-  ): Promise<Object | Error> {
+  ): Promise<Object | StatusCode> {
     try {
       if (file === null || file.images === undefined)
-        return new Error("an image or .zip must be provided");
+        return new BadRequestError().setImageZipAbsent();
 
       await this.checkUserDataset(request.datasetId);
 
@@ -270,13 +272,13 @@ export class Controller {
           cost
         );
         if (Object.keys(ids).length === 0)
-          return new Error("no images was valid");
+          return new BadRequestError().setNoValidImages();
         return ids;
       }
 
-      return new Error("file must be an image or a .zip of images");
-    } catch (err) {
-      return new Error(err.message);
+      return new BadRequestError().setImageZipAbsent();
+    } catch (error) {
+      return error;
     }
   }
 
@@ -296,8 +298,8 @@ export class Controller {
         request.url,
         request.singleImageName
       );
-    } catch (err) {
-      return new Error(err.message);
+    } catch (error) {
+      return error;
     }
   }
 }

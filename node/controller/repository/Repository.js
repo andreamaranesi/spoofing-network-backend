@@ -21,6 +21,7 @@ const stream_1 = require("stream");
 const moment = require("moment");
 const axios_1 = require("axios");
 const sequelize_1 = require("sequelize");
+const StatusCode_1 = require("../../factory/StatusCode");
 /**
  * communicates with models
  * models are the DAO level
@@ -105,7 +106,7 @@ class Repository {
                 yield this.user.set({ token: this.user.token - cost }).save();
             }
             catch (err) {
-                throw new Error("error on updating token");
+                throw new StatusCode_1.ServerError().setUpdatingToken();
             }
         });
     }
@@ -150,14 +151,14 @@ class Repository {
                     }
                     resolve(images);
                 }))
-                    .on("error", (error) => reject(error));
+                    .on("error", (error) => reject(new StatusCode_1.ServerError().set(error.message)));
             });
         });
     }
     // checks if the user token amount is >= requested amount
     checkUserToken(user, amount) {
         if (user.token < amount)
-            throw new Error(`you need ${amount} tokens for this operation`);
+            throw new StatusCode_1.ForbiddenError().setNeedMoreToken(amount);
     }
     // saves images from an uploaded file or a .zip of images
     // downloads image or .zip from an URL if the URL is specified
@@ -173,11 +174,11 @@ class Repository {
                     .get(url, { responseType: "stream" })
                     .then((res) => __awaiter(this, void 0, void 0, function* () {
                     console.log(`statusCode: ${res.status}`);
-                    if (res.status !== 200)
-                        throw new Error("can't access the file");
+                    if (res.status !== 200 && res.status !== 201)
+                        throw new StatusCode_1.ForbiddenError().setInvalidUrlResponse(url);
                     let mimetype = res.headers["content-type"];
                     if (!Images_1.Image.isValidMimetype(mimetype)) {
-                        throw new Error("you must give an URL with supported images or zip file");
+                        throw new StatusCode_1.BadRequestError().setImageZipAbsent();
                     }
                     // the file stream
                     file = res.data;
@@ -201,12 +202,12 @@ class Repository {
                     }
                     return {};
                 }))
-                    .catch((err) => {
+                    .catch((error) => {
                     // if it is an axios error
-                    if (err.response !== undefined) {
-                        throw new Error("unreadable url");
+                    if (error.response !== undefined) {
+                        throw new StatusCode_1.ForbiddenError().setUnreadableUrl(url);
                     }
-                    throw new Error(err.message);
+                    throw error;
                 });
             }
             else {
@@ -309,7 +310,7 @@ class Repository {
             // final Sequelize filtering options
             const FILTER_OPTIONS = {
                 where: {
-                    userId: this.user.id
+                    userId: this.user.id,
                 },
                 include: includeOptions,
             };
@@ -373,7 +374,7 @@ class Repository {
                 return res.data;
             }))
                 .catch((err) => {
-                throw new Error(err);
+                throw new StatusCode_1.ServerError().set(err.message);
             });
         });
     }
@@ -388,8 +389,7 @@ class Repository {
                     yield this.updateUserTokenByCost(this.user, cost);
                 }
                 catch (_a) {
-                    throw new Error("there was an error. List of already saved labels: " +
-                        JSON.stringify(updatedImages));
+                    throw new StatusCode_1.ServerError().setAlreadyUpdatedLabels(updatedImages);
                 }
                 yield images[i].set({ label: labels[i] }).save();
                 updatedImages.push(images[i]);

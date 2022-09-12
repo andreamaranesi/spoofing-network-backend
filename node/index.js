@@ -13,18 +13,19 @@ const Controller_1 = require("./controller/Controller");
 const middleware_1 = require("./middleware/middleware");
 const fileUpload = require("express-fileupload");
 const express_validator_1 = require("express-validator");
+const StatusCode_1 = require("./factory/StatusCode");
 var express = require("express");
 var app = express();
 app.use(middleware_1.checkToken);
 app.use(middleware_1.verifyAndAuthenticate);
 app.use(middleware_1.verifyTokenAmount);
-app.use(middleware_1.errorHandler);
+app.use(middleware_1.authenticationErrorHandler);
 app.get("/get/token", function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let controller = new Controller_1.Controller(req.user);
         const RESULT = controller.getUserToken();
-        if (RESULT instanceof Error)
-            res.status(500).send({ error: RESULT.message });
+        if (RESULT instanceof StatusCode_1.StatusCode)
+            RESULT.send(res);
         else
             res.json(RESULT);
     });
@@ -38,7 +39,7 @@ const checkValidation = function (res, errors) {
 };
 // send back validation errors
 const sendValidationError = function (res, errors) {
-    res.status(500).send({ error: errors.array() });
+    new StatusCode_1.BadRequestError().set(errors.array()).send(res);
 };
 const validateListImages = [
     (0, express_validator_1.body)("images")
@@ -61,7 +62,7 @@ const validateTags = [
         .withMessage("tag name must be <= 50 characters"),
 ];
 // route to create a new dataset
-app.get("/create/dataset", (0, express_validator_1.body)("name")
+app.post("/create/dataset", (0, express_validator_1.body)("name")
     .exists()
     .isString()
     .isLength({ max: 50 })
@@ -73,18 +74,17 @@ app.get("/create/dataset", (0, express_validator_1.body)("name")
         if (error !== null)
             sendValidationError(res, error);
         else {
-            checkValidation(res, (0, express_validator_1.validationResult)(req));
             let controller = new Controller_1.Controller(req.user);
             const DATASET = yield controller.checkCreateDataset(req.body);
-            if (DATASET instanceof Error)
-                res.status(500).send({ error: DATASET.message });
+            if (DATASET instanceof StatusCode_1.StatusCode)
+                DATASET.send(res);
             else
-                res.json(DATASET);
+                res.status(201).json(DATASET);
         }
     });
 });
 // route to update a dataset
-app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), (0, express_validator_1.body)("name")
+app.post("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), (0, express_validator_1.body)("name")
     .optional()
     .exists()
     .isString()
@@ -104,8 +104,8 @@ app.get("/update/dataset", (0, express_validator_1.body)("datasetId").isInt(), (
         else {
             let controller = new Controller_1.Controller(req.user);
             const DATASET = yield controller.checkUpdateDataset(req.body);
-            if (DATASET instanceof Error)
-                res.status(500).send({ error: DATASET.message });
+            if (DATASET instanceof StatusCode_1.StatusCode)
+                DATASET.send(res);
             else
                 res.json(DATASET);
         }
@@ -120,8 +120,8 @@ app.get("/delete/dataset", (0, express_validator_1.body)("datasetId").isInt(), f
         else {
             let controller = new Controller_1.Controller(req.user);
             const DATASET = yield controller.checkDeleteDataset(req.body);
-            if (DATASET instanceof Error)
-                res.status(500).send({ error: DATASET.message });
+            if (DATASET instanceof StatusCode_1.StatusCode)
+                DATASET.send(res);
             else
                 res.json(DATASET);
         }
@@ -151,8 +151,8 @@ app.get("/get/dataset", (0, express_validator_1.body)("startDate")
         else {
             let controller = new Controller_1.Controller(req.user);
             const DATASET = yield controller.checkGetDataset(req.body);
-            if (DATASET instanceof Error)
-                res.status(500).send({ error: DATASET.message });
+            if (DATASET instanceof StatusCode_1.StatusCode)
+                DATASET.send(res);
             else
                 res.json(DATASET);
         }
@@ -170,8 +170,8 @@ app.get("/set/token", middleware_1.isAdmin, (0, express_validator_1.body)("email
         else {
             let controller = new Controller_1.Controller(req.user);
             const RESULT = yield controller.checkSetToken(req.body);
-            if (RESULT instanceof Error)
-                res.status(500).send({ error: RESULT.message });
+            if (RESULT instanceof StatusCode_1.StatusCode)
+                RESULT.send(res);
             else
                 res.json(RESULT);
         }
@@ -186,8 +186,8 @@ app.get("/get/inference", validateListImages, function (req, res) {
         else {
             let controller = new Controller_1.Controller(req.user);
             const RESULT = yield controller.checkDoInference(req.body);
-            if (RESULT instanceof Error)
-                res.status(500).send({ error: RESULT.message });
+            if (RESULT instanceof StatusCode_1.StatusCode)
+                RESULT.send(res);
             else
                 res.json(RESULT);
         }
@@ -205,8 +205,8 @@ app.get("/set/label", validateListImages, (0, express_validator_1.body)("labels"
         else {
             let controller = new Controller_1.Controller(req.user);
             const RESULT = yield controller.checkSetLabel(req.body);
-            if (RESULT instanceof Error)
-                res.status(500).send({ error: RESULT.message });
+            if (RESULT instanceof StatusCode_1.StatusCode)
+                RESULT.send(res);
             else
                 res.json(RESULT);
         }
@@ -222,8 +222,8 @@ app.get("/images/url", (0, express_validator_1.body)("url").isURL(), (0, express
         else {
             let controller = new Controller_1.Controller(req.user);
             const RESULT = yield controller.checkInsertImagesFromUrl(req.body);
-            if (RESULT instanceof Error)
-                res.status(500).send({ error: RESULT.message });
+            if (RESULT instanceof StatusCode_1.StatusCode)
+                RESULT.send(res);
             else
                 res.json(RESULT);
         }
@@ -240,8 +240,8 @@ app.post("/images/file", (0, express_validator_1.body)("datasetId").isInt(), fun
         else {
             let controller = new Controller_1.Controller(req.user);
             const RESULT = yield controller.checkInsertImagesFromFile(req.files, req.body);
-            if (RESULT instanceof Error)
-                res.status(500).send({ error: RESULT.message });
+            if (RESULT instanceof StatusCode_1.StatusCode)
+                RESULT.send(res);
             else
                 res.json(RESULT);
         }

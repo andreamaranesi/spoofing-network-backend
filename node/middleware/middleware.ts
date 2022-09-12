@@ -1,3 +1,4 @@
+import { AuthenticationError } from "../factory/StatusCode";
 import { User } from "../models/User";
 const jwt = require("jsonwebtoken");
 
@@ -20,12 +21,10 @@ export const verifyAndAuthenticate = async (req, res, next) => {
     // check if user exists
     if (req.user === null)
       next(new Error(`user with email ${req.user.email} doesn't exist`));
-
   } catch (error) {
     if (typeof error === "object")
-      if (error.name == "TokenExpiredError")
-        res.status(401).send({ error: "Token Expired" });
-      else res.status(401).send({ error: error.message });
+      if (error.name == "TokenExpiredError") new AuthenticationError().setTokenExpired().send(res);
+      else next(new Error(error.message));
     else next(new Error(error));
   }
 
@@ -35,18 +34,18 @@ export const verifyAndAuthenticate = async (req, res, next) => {
 // validate the token amount of the default user
 export const verifyTokenAmount = async (req, res, next) => {
   if (req.user.token == 0 && !req.user.isAdmin) {
-    res.status(401).send({ error: "Token amount is 0" });
+    new AuthenticationError().setTokenZero().send(res);
   } else next();
 };
 
 // send back the error message
-export const errorHandler = (err, req, res, next) => {
-  res.status(401).send({ error: err.message });
+export const authenticationErrorHandler = (err, req, res, next) => {
+  new AuthenticationError().set(err.message).send(res);
 };
 
 // check if the user is the admin
 export const isAdmin = (req, res, next) => {
   if (!req.user.isAdmin)
-    res.status(401).send({ error: "user must be the admin" });
+    new AuthenticationError().setNotAdmin().send(res);
   else next();
 };

@@ -15,6 +15,7 @@ const User_1 = require("../models/User");
 const Repository_1 = require("./repository/Repository");
 const Images_1 = require("../models/Images");
 const sequelize_1 = require("sequelize");
+const StatusCode_1 = require("../factory/StatusCode");
 /**
  * manages and checks user routes
  */
@@ -38,7 +39,7 @@ class Controller {
             ids.push(result[key]);
         }
         let difference = originalList.filter((id) => !ids.includes(id));
-        throw new Error(difference.join(",") + ` id(s) are not accessible`);
+        throw new StatusCode_1.ForbiddenError().setNotAccessible(difference);
     }
     // checks if dataset id is owned by the authenticated user
     // returns the datasets found
@@ -75,7 +76,7 @@ class Controller {
                 }
                 let dataset = yield Dataset_1.Dataset.scope("visible").findOne(FILTER_OPTIONS);
                 if (dataset !== null)
-                    throw new Error(`there is already a dataset with name ${name}`);
+                    throw new StatusCode_1.ForbiddenError().setDatasetSameName(name);
             }
         });
     }
@@ -87,7 +88,7 @@ class Controller {
                 return yield this.repository.createDataset(datasetJson);
             }
             catch (error) {
-                return new Error(error.message);
+                return error;
             }
         });
     }
@@ -103,7 +104,7 @@ class Controller {
                 return yield this.repository.updateDataset(datasetJson, dataset[0]);
             }
             catch (error) {
-                return new Error(error.message);
+                return error;
             }
         });
     }
@@ -115,7 +116,7 @@ class Controller {
                 return yield this.repository.getDatasetList(filters);
             }
             catch (error) {
-                return new Error(error.message);
+                return error;
             }
         });
     }
@@ -162,20 +163,20 @@ class Controller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (this.checkDuplicateEntries(request.images))
-                    return new Error("there are duplicated entries on images");
+                    return new StatusCode_1.BadRequestError().setDuplicateImageEntries();
                 let images = yield this.checkUserImages(request.images);
                 // if user gives one image
                 // checks if the image has already an inference
                 if (images.length === 1) {
                     if (images[0].inference !== null) {
-                        return new Error(`image id ${images[0].id} has already an inference: ${images[0].inference}`);
+                        return new StatusCode_1.BadRequestError().setImageWithInference(images[0].id, images[0].inference);
                     }
                 }
                 const COST = parseFloat(process.env.INFERENCE_COST);
                 return yield this.repository.getInference(images, COST);
             }
-            catch (err) {
-                return new Error(err.message);
+            catch (error) {
+                return error;
             }
         });
     }
@@ -186,17 +187,17 @@ class Controller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (this.checkDuplicateEntries(request.images))
-                    return new Error("there are duplicated entries on images");
+                    return new StatusCode_1.BadRequestError().setDuplicateImageEntries();
                 // the length of the labels must be equal to that of the images
                 if (request.images.length !== request.labels.length)
-                    return new Error("labels length must be equal to images length");
+                    return new StatusCode_1.BadRequestError().setLabelImageLength();
                 let images = yield this.checkUserImages(request.images);
                 const COST = parseFloat(process.env.LABEL_COST);
                 this.repository.checkUserToken(this.user, COST * images.length);
                 return yield this.repository.setLabel(images, request.labels, COST);
             }
-            catch (err) {
-                return new Error(err.message);
+            catch (error) {
+                return error;
             }
         });
     }
@@ -208,8 +209,8 @@ class Controller {
                 let dataset = yield this.checkUserDataset(request.datasetId);
                 return yield this.repository.deleteDataset(dataset[0]);
             }
-            catch (err) {
-                return new Error(err.message);
+            catch (error) {
+                return error;
             }
         });
     }
@@ -223,11 +224,11 @@ class Controller {
                     },
                 });
                 if (userToUpdate === null)
-                    throw new Error(`user with email ${request.email} doesn't exist`);
+                    throw new StatusCode_1.ForbiddenError().setNoEmail(request.email);
                 return yield this.repository.updateUserToken(userToUpdate, request.token);
             }
-            catch (err) {
-                return new Error(err.message);
+            catch (error) {
+                return error;
             }
         });
     }
@@ -238,7 +239,7 @@ class Controller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (file === null || file.images === undefined)
-                    return new Error("an image or .zip must be provided");
+                    return new StatusCode_1.BadRequestError().setImageZipAbsent();
                 yield this.checkUserDataset(request.datasetId);
                 file = file.images;
                 const IS_VALID_FILE = Images_1.Image.isValidMimetype(file.mimetype);
@@ -246,13 +247,13 @@ class Controller {
                 if (IS_VALID_FILE) {
                     let ids = yield this.repository.saveImage(file, request.datasetId, cost);
                     if (Object.keys(ids).length === 0)
-                        return new Error("no images was valid");
+                        return new StatusCode_1.BadRequestError().setNoValidImages();
                     return ids;
                 }
-                return new Error("file must be an image or a .zip of images");
+                return new StatusCode_1.BadRequestError().setImageZipAbsent();
             }
-            catch (err) {
-                return new Error(err.message);
+            catch (error) {
+                return error;
             }
         });
     }
@@ -266,8 +267,8 @@ class Controller {
                 let cost = parseFloat(process.env.INSERT_IMAGE_COST);
                 return yield this.repository.saveImage(null, request.datasetId, cost, request.url, request.singleImageName);
             }
-            catch (err) {
-                return new Error(err.message);
+            catch (error) {
+                return error;
             }
         });
     }

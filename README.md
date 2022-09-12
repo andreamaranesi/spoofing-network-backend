@@ -196,7 +196,7 @@ web-node:
 
 | METHOD | URL             | DATA TYPE | RESPONSE TYPE |
 | ------ | --------------- | --------- | ------------- |
-| GET    | /create/dataset | Json      | Json          |
+| POST   | /create/dataset | Json      | Json          |
 
 | PARAMETER  | REQUIRED | TYPE           | CONSTRAINTS       |
 | ---------- | -------- | -------------- | ----------------- |
@@ -238,7 +238,7 @@ web-node:
 
 | METHOD | URL             | DATA TYPE | RESPONSE TYPE |
 | ------ | --------------- | --------- | ------------- |
-| GET    | /update/dataset | Json      | Json          |
+| POST   | /update/dataset | Json      | Json          |
 
 | PARAMETER  | REQUIRED | TYPE           | CONSTRAINTS       |
 | ---------- | -------- | -------------- | ----------------- |
@@ -323,7 +323,7 @@ web-node:
 **NOTES**
 
 - `startDate` without `endDate` will search for datasets with `creationDate` >= `startDate`
-- `endDate` without `startDate` will search for datasets with `creationDate <= endDate` 
+- `endDate` without `startDate` will search for datasets with `creationDate` <= `endDate` 
 - `tagRelationship = or` will search for datasets with one of the defined tags
 - `tagRelationship = and` will search for datasets with all the defined tags
 
@@ -585,7 +585,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response(500)**:
+**Response(400)**:
 
 ```json
 {
@@ -613,7 +613,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -648,7 +648,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -723,7 +723,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response**:
+**Response (400)** :
 
 ```json
 {
@@ -752,7 +752,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -820,7 +820,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (403)**:
 
 ```json
 {
@@ -842,7 +842,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (403)**:
 
 ```json
 {
@@ -862,7 +862,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -918,7 +918,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -975,7 +975,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -1055,7 +1055,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -1123,11 +1123,11 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (403)**:
 
 ```json
 {
-    "error": "unreadable url"
+    "error": "unreadable url https://dremardesign.com/t.jpg"
 }
 ```
 
@@ -1144,7 +1144,7 @@ filename will be truncated if > 100 characters
 | images    | None  |
 | datasetId | 4     |
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -1206,7 +1206,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -1227,7 +1227,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)**:
+**Response (400)**:
 
 ```json
 {
@@ -1487,7 +1487,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response (500)** :
+**Response (403)** :
 
 ```json
 {
@@ -1511,7 +1511,7 @@ filename will be truncated if > 100 characters
 ```json
 {
     "updatedUser": {
-        "token": 100000,
+        "token": 100,
         "id": 1,
         "email": "alex@email.com",
         "userName": "alessandro",
