@@ -42,7 +42,6 @@ Image.init(
     fileName: {
       type: DataTypes.STRING(100),
       set(value: string) {
-
         // truncates the fileName so it will be equal to 100 character
         const truncateFileName = (string: string): string => {
           if (value.length >= 100) {
@@ -66,7 +65,6 @@ Image.init(
       type: DataTypes.STRING(50),
       allowNull: true,
       set(value: string) {
-
         // makes the first letter of a string upper case, the remaining lower case
         const capitalize = (string: string): string =>
           string[0].toUpperCase() + string.slice(1).toLowerCase();
@@ -111,6 +109,6 @@ Image.init(
 
 // one to many relationship
 Dataset.hasMany(Image, {
-  foreignKey: "datasetId",
+  foreignKey: "datasetId", as: "images"
 });
 Image.belongsTo(Dataset);

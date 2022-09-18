@@ -357,6 +357,7 @@ export class Repository {
       {
         model: Image,
         required: false,
+        as: "images"
       },
     ];
 
@@ -367,6 +368,7 @@ export class Repository {
       includeOptions.push({
         model: DatasetTag,
         required: true,
+        as: "datasetTags",
         where: {
           tag: {
             [Op.in]: tags,
@@ -395,7 +397,7 @@ export class Repository {
     // filter datasets that have not the list of the given distinct tags
     if (tags !== undefined && tagRelationship === "and")
       return datasets.filter(
-        (dataset) => dataset["DatasetTags"].length === tags.length
+        (dataset) => dataset["datasetTags"].length === tags.length
       );
 
     return datasets;

@@ -49,7 +49,7 @@ DatasetTag.init(
 
 // one to many relationship
 Dataset.hasMany(DatasetTag, {
-  foreignKey: "datasetId",
+  foreignKey: "datasetId", as: "datasetTags"
 });
 
 DatasetTag.belongsTo(Dataset);

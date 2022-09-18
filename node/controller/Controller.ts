@@ -133,6 +133,7 @@ export class Controller {
       include: {
         model: Image,
         required: true,
+        as: "images",
         where: {
           id: {
             [Op.in]: imageIds,
@@ -147,7 +148,7 @@ export class Controller {
     // retrieves images inside the dataset array
     let images: Array<Image> = [];
     for (let dataset of datasets) {
-      for (let image of dataset["Images"]) {
+      for (let image of dataset["images"]) {
         images.push(image);
       }
     }

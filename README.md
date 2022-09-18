@@ -224,7 +224,7 @@ web-node:
 
 | METHOD | URL             | DATA TYPE | RESPONSE TYPE |
 | ------ | --------------- | --------- | ------------- |
-| POST   | /create/dataset | Json      | Json          |
+| POST   | /dataset | Json      | Json          |
 
 | PARAMETER  | REQUIRED | TYPE           | CONSTRAINTS       |
 | ---------- | -------- | -------------- | ----------------- |
@@ -266,7 +266,7 @@ web-node:
 
 | METHOD | URL             | DATA TYPE | RESPONSE TYPE |
 | ------ | --------------- | --------- | ------------- |
-| POST   | /update/dataset | Json      | Json          |
+| PUT   | /dataset | Json      | Json          |
 
 | PARAMETER  | REQUIRED | TYPE           | CONSTRAINTS       |
 | ---------- | -------- | -------------- | ----------------- |
@@ -308,7 +308,7 @@ web-node:
 
 | METHOD | URL             | DATA TYPE | RESPONSE TYPE |
 | ------ | --------------- | --------- | ------------- |
-| GET    | /delete/dataset | Json      | Json          |
+| DELETE    | /dataset | Json      | Json          |
 
 | PARAMETER | REQUIRED | TYPE | CONSTRAINTS |
 | --------- | -------- | ---- | ----------- |
@@ -335,7 +335,7 @@ web-node:
 
 | METHOD | URL          | DATA TYPE | RESPONSE TYPE |
 | ------ | ------------ | --------- | ------------- |
-| GET    | /get/dataset | Json      | Json          |
+| GET    | /dataset | Json      | Json          |
 
 | PARAMETER       | REQUIRED | TYPE           | DEFAULT VALUE | CONSTRAINTS                 |
 | --------------- | -------- | -------------- | ------------- | --------------------------- |
@@ -365,7 +365,7 @@ web-node:
         "numClasses": int,
         "creationDate": date,
         "userId": int,
-        "Images": [
+        "images": [
             {
                 "id": int,
                 "fileName": string,
@@ -374,7 +374,7 @@ web-node:
                 "datasetId": int
             }
         ],
-        "DatasetTags"?: [
+        "datasetTags"?: [
             {
                 "datasetId": int,
                 "tag": string
@@ -392,7 +392,7 @@ web-node:
 
 | METHOD | URL         | DATA TYPE | RESPONSE TYPE |
 | ------ | ----------- | --------- | ------------- |
-| GET    | /images/url | Json      | Json          |
+| POST    | /images/url | Json      | Json          |
 
 | PARAMETER       | REQUIRED | TYPE   | DEFAULT         | CONSTRAINTS                                   |
 | --------------- | -------- | ------ | --------------- | --------------------------------------------- |
@@ -502,7 +502,7 @@ filename will be truncated if > 100 characters
 
 | METHOD | URL            | DATA TYPE | RESPONSE TYPE |
 | ------ | -------------- | --------- | ------------- |
-| GET    | /get/inference | Json      | Json          |
+| GET    | /inference | Json      | Json          |
 
 | PARAMETER | REQUIRED | TYPE        |
 | --------- | -------- | ----------- |
@@ -557,7 +557,7 @@ filename will be truncated if > 100 characters
 
 | METHOD | URL        | RESPONSE TYPE |
 | ------ | ---------- | ------------- |
-| GET    | /get/token | Json          |
+| GET    | /token | Json          |
 
 **RESPONSE SCHEMA**
 
@@ -575,7 +575,7 @@ filename will be truncated if > 100 characters
 
 | METHOD | URL        | DATA TYPE | RESPONSE TYPE |
 | ------ | ---------- | --------- | ------------- |
-| GET    | /set/token | Json      | Json          |
+| PUT    | /token | Json      | Json          |
 
 | PARAMETER | REQUIRED | TYPE  | CONSTRAINT |
 | --------- | -------- | ----- | ---------- |
@@ -711,7 +711,7 @@ filename will be truncated if > 100 characters
 }
 ```
 
-**Response**:
+**Response (201)**:
 
 ```json
 {
@@ -1043,7 +1043,7 @@ filename will be truncated if > 100 characters
         "numClasses": 2,
         "creationDate": "2022-08-22",
         "userId": 1,
-        "Images": [
+        "images": [
             {
                 "id": 4,
                 "fileName": "test2.jpg",
@@ -1052,7 +1052,7 @@ filename will be truncated if > 100 characters
                 "datasetId": 4
             }
         ],
-        "DatasetTags": [
+        "datasetTags": [
             {
                 "datasetId": 4,
                 "tag": "faces"

@@ -7,19 +7,21 @@ import {
   isAdmin,
 } from "./middleware/middleware";
 import * as fileUpload from "express-fileupload";
-import { body, oneOf, validationResult } from "express-validator";
 import { StatusCode } from "./factory/StatusCode";
 import { ConcreteErrorFactory } from "./factory/ErrorFactory";
+import { DatasetFields, ValidationBuilder } from "./builder/ValidationBuilder";
+import { body, oneOf, validationResult } from "express-validator";
+import * as express from "express";
 
-var express = require("express");
 var app = express();
+var validationBuilder = new ValidationBuilder();
 
 app.use(checkToken);
 app.use(verifyAndAuthenticate);
 app.use(verifyTokenAmount);
 app.use(authenticationErrorHandler);
 
-app.get("/get/token", async function (req, res) {
+app.get("/token", async function (req: any, res: any) {
   let controller = new Controller(req.user);
   const RESULT = controller.getUserToken();
   if (RESULT instanceof StatusCode) RESULT.send(res);
@@ -40,41 +42,15 @@ const sendValidationError = function (res, errors) {
   new ConcreteErrorFactory().createBadRequest().set(errors.array()).send(res);
 };
 
-const validateListImages = [
-  body("images")
-    .isArray()
-    .notEmpty()
-    .withMessage("images must be a list of id"),
-  body("images.*").isInt().withMessage("image id must be an integer"),
-];
-
-const validateTags = [
-  body("tags")
-    .optional()
-    .isArray()
-    .notEmpty()
-    .withMessage("tags must be a list of string"),
-  body("tags.*")
-    .optional()
-    .isString()
-    .withMessage("tag must be a string")
-    .isLength({ max: 50 })
-    .withMessage("tag name must be <= 50 characters"),
-];
-
 // route to create a new dataset
 app.post(
-  "/create/dataset",
-  body("name")
-    .exists()
-    .isString()
-    .isLength({ max: 50 })
-    .withMessage("dataset name must be <= 50 characters"),
-  body("numClasses")
-    .isInt({ min: 1, max: 50 })
-    .withMessage("numClasses must be between 1 and 50"),
-  validateTags,
-  async function (req, res) {
+  "/dataset",
+  validationBuilder
+    .setDatasetName()
+    .setDatasetNumClasses()
+    .setTags(true)
+    .build(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -87,26 +63,18 @@ app.post(
 );
 
 // route to update a dataset
-app.post(
-  "/update/dataset",
-  body("datasetId").isInt(),
-  body("name")
-    .optional()
-    .exists()
-    .isString()
-    .isLength({ max: 50 })
-    .withMessage("dataset name must be <= 50 characters"),
-  body("numClasses")
-    .optional()
-    .isInt({ min: 1, max: 50 })
-    .withMessage("numClasses must be between 1 and 50"),
-  validateTags,
-  oneOf([
-    body("name").exists(),
-    body("numClasses").exists().isInt(),
-    body("tags").exists(),
-  ]),
-  async function (req, res) {
+app.put(
+  "/dataset",
+  validationBuilder
+    .setDatasetId()
+    .setDatasetName(true)
+    .setDatasetNumClasses(true)
+    .setTags(true)
+    .build(),
+  validationBuilder
+    .setOneOf(DatasetFields.name, DatasetFields.classes, DatasetFields.tag)
+    .buildOneOf(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -119,10 +87,10 @@ app.post(
 );
 
 // route to logically delete a dataset
-app.get(
-  "/delete/dataset",
-  body("datasetId").isInt(),
-  async function (req, res) {
+app.delete(
+  "/dataset",
+  validationBuilder.setDatasetId().build(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -134,31 +102,19 @@ app.get(
   }
 );
 
-const EXPRESS_DATE_MESSAGE = "Date must be in the format DD-MM-YYYY";
-
 // route to filter datasets by tag and/or creation date
 app.get(
-  "/get/dataset",
-  body("startDate")
-    .optional()
-    .isDate({ format: "DD-MM-YYYY" })
-    .withMessage(EXPRESS_DATE_MESSAGE),
-  body("endDate")
-    .optional()
-    .isDate({ format: "DD-MM-YYYY" })
-    .withMessage(EXPRESS_DATE_MESSAGE),
-  body("tagRelationship")
-    .optional()
-    .toLowerCase()
-    .isIn(["and", "or"])
-    .withMessage("tag relationship can be 'or','and'"),
-  validateTags,
-  oneOf([
-    body("startDate").exists(),
-    body("endDate").exists(),
-    body("tags").exists(),
-  ]),
-  async function (req, res) {
+  "/dataset",
+  validationBuilder
+    .setDatasetDate(true, true)
+    .setDatasetDate(false, true)
+    .setTags(true)
+    .setTagRelationship(true)
+    .build(),
+  validationBuilder
+    .setOneOf(DatasetFields.startDate, DatasetFields.endDate, DatasetFields.tag)
+    .buildOneOf(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -172,14 +128,11 @@ app.get(
 
 // admin route
 // update a user token amount
-app.get(
-  "/set/token",
+app.put(
+  "/token",
   isAdmin,
-  body("email").isEmail(),
-  body("token")
-    .isFloat({ max: 100000 })
-    .withMessage("token amount must be less than 100000"),
-  async function (req, res) {
+  validationBuilder.setUserEmail().setUserToken().build(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -192,27 +145,26 @@ app.get(
 );
 
 // route to get image inferences
-app.get("/get/inference", validateListImages, async function (req, res) {
-  let error = checkValidation(res, validationResult(req));
-  if (error !== null) sendValidationError(res, error);
-  else {
-    let controller = new Controller(req.user);
-    const RESULT = await controller.checkDoInference(req.body);
-    if (RESULT instanceof StatusCode) RESULT.send(res);
-    else res.json(RESULT);
+app.get(
+  "/inference",
+  validationBuilder.setImages().build(),
+  async function (req: any, res: any) {
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const RESULT = await controller.checkDoInference(req.body);
+      if (RESULT instanceof StatusCode) RESULT.send(res);
+      else res.json(RESULT);
+    }
   }
-});
+);
 
 // route to set labels of images
-app.get(
-  "/set/label",
-  validateListImages,
-  body("labels").isArray(),
-  body("labels.*")
-    .toLowerCase()
-    .isIn(["real", "fake"])
-    .withMessage("label must be real or fake"),
-  async function (req, res) {
+app.put(
+  "/label",
+  validationBuilder.setImages().setImageLabels().build(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -226,12 +178,14 @@ app.get(
 
 // route to insert images to a dataset by an url
 // url must be a supported image or a .zip of supported images
-app.get(
+app.post(
   "/images/url",
-  body("url").isURL(),
-  body("datasetId").isInt(),
-  body("singleImageName").optional().isString().exists(),
-  async function (req, res) {
+  validationBuilder
+    .setImageUrl()
+    .setDatasetId()
+    .setSingleImageName(true)
+    .build(),
+  async function (req: any, res: any) {
     let error = checkValidation(res, validationResult(req));
     if (error !== null) sendValidationError(res, error);
     else {
@@ -247,23 +201,27 @@ app.use(fileUpload());
 
 // route to insert images to a dataset by a form
 // file must be a supported image or a .zip of supported images
-app.post("/images/file", body("datasetId").isInt(), async function (req, res) {
-  let error = checkValidation(res, validationResult(req));
-  if (error !== null) sendValidationError(res, error);
-  else {
-    let controller = new Controller(req.user);
-    const RESULT = await controller.checkInsertImagesFromFile(
-      req.files,
-      req.body
-    );
-    if (RESULT instanceof StatusCode) RESULT.send(res);
-    else res.json(RESULT);
+app.post(
+  "/images/file",
+  validationBuilder.setDatasetId().build(),
+  async function (req: any, res: any) {
+    let error = checkValidation(res, validationResult(req));
+    if (error !== null) sendValidationError(res, error);
+    else {
+      let controller = new Controller(req.user);
+      const RESULT = await controller.checkInsertImagesFromFile(
+        req.files,
+        req.body
+      );
+      if (RESULT instanceof StatusCode) RESULT.send(res);
+      else res.json(RESULT);
+    }
   }
-});
-
-app.listen(
-  process.env.NODE_PORT || 3000,
-  process.env.NODE_INTERFACE || "0.0.0.0"
 );
+
+const NODE_PORT = process.env.NODE_PORT || 3000;
+const NODE_INTERFACE = process.env.NODE_INTERFACE || "0.0.0.0";
+
+app.listen(<number>NODE_PORT, NODE_INTERFACE);
 
 console.log("node started");

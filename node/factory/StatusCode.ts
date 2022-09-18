@@ -56,7 +56,6 @@ export class AuthenticationError extends StatusCode {
 
 export class BadRequestError extends StatusCode {
   private message: Object;
-  static setNoZipOrImage: any;
 
   setNoValidImages(): StatusCode {
     return this.set("no images was valid");

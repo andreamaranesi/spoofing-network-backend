@@ -6,9 +6,13 @@ const jwt = require("jsonwebtoken");
 export const checkToken = (req, res, next) => {
   const bearerHeader = req.headers.authorization;
   if (typeof bearerHeader !== "undefined") {
-    const bearerToken = bearerHeader.split(" ")[1];
-    req.token = bearerToken;
-    next();
+    try {
+      const bearerToken = bearerHeader.split(" ")[1];
+      req.token = bearerToken;
+      next();
+    } catch (error) {
+      next(new Error("token invalid"));
+    }
   } else next(new Error("token absent"));
 };
 
@@ -21,6 +25,7 @@ export const verifyAndAuthenticate = async (req, res, next) => {
     // check if user exists
     if (req.user === null)
       next(new Error(`user with email ${req.user.email} doesn't exist`));
+    else next();
   } catch (error) {
     if (typeof error === "object")
       if (error.name == "TokenExpiredError")
@@ -31,8 +36,6 @@ export const verifyAndAuthenticate = async (req, res, next) => {
       else next(new Error(error.message));
     else next(new Error(error));
   }
-
-  next();
 };
 
 // validate the token amount of the default user

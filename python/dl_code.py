@@ -68,19 +68,6 @@ def detect_save_face(frame, output_path=None, multiple_output=False):
                 # we save the face
                 faces.append(face)
 
-                try:
-                    # if we had defined a mask, we take the face also in that mask
-                   #   if mask is not None:
-                    #    face_mask = mask[startY:endY, startX:endX]
-                 #   cv2.imwrite(output_path_mask, face_mask)
-                    # write the frame to disk
-
-                    # we save the image if output_path is defined
-                    if output_path is not None:
-                        cv2.imwrite(output_path, face)
-
-                except:
-                    pass
 
     return faces, coordinates
 
@@ -91,8 +78,6 @@ def resize_normalize_image(image, max_value=255):
     return (image) / np.max(image)
 
 # extracts and predicts the most likely human face, if found
-
-
 def extract_and_predict_faces(image):
 
     def translate(k):
