@@ -64,7 +64,7 @@ docker compose up
 
 ### Class Diagram:
 
-![](https://github.com/andreamaranesi/spoofing-network-backend/blob/main/diagrams/class%20diagram.svg)
+![](https://raw.githubusercontent.com/andreamaranesi/spoofing-network-backend/6a47452221d60fcdf1938601e411849b89a51adb/diagrams/class%20diagram.svg)
 
 ### Sequence Diagram (only for some actions):
 
@@ -173,6 +173,30 @@ app.get("/get/token", async function (req, res) {
 });
 ```
 
+To **validate user requests** we use a **Builder**:
+
+```typescript
+var validationBuilder = new ValidationBuilder();
+```
+
+It creates the validation rules in the **middleware level**:
+
+```typescript
+// route to update a dataset
+app.put(
+  "/dataset",
+  validationBuilder
+    .setDatasetId()
+    .setDatasetName(true)
+    .setDatasetNumClasses(true)
+    .setTags(true)
+    .build(),
+  validationBuilder
+    .setOneOf(DatasetFields.name, DatasetFields.classes, DatasetFields.tag)
+    .buildOneOf(),
+    ......
+```
+
 Moreover, error responses are managed by the **ErrorFactory**:
 
 ```typescript
@@ -184,7 +208,15 @@ export interface ErrorFactory {
 }
 ```
 
-Each class manages custom error messages, for example
+Each function returns a specific instance of a class:
+
+```typescript
+createAuthentication(): AuthenticationError {
+    return new AuthenticationError();
+ }
+```
+
+Each class then manages custom error messages, for example
 
 ```typescript
  setNeedMoreToken(tokenAmout: number): StatusCode {
@@ -192,7 +224,7 @@ Each class manages custom error messages, for example
  }
 ```
 
-and send back the response:
+and sends back the response:
 
 ```typescript
 send(response: any): StatusCode {
